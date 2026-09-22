@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Volentify - Tactical Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#09151a",
+                        "on-secondary-container": "#a8afff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#ffb693",
+                        "surface-container": "#152127",
+                        "primary": "#ffb693",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#343d96",
+                        "surface": "#09151a",
+                        "outline-variant": "#5a4136",
+                        "primary-fixed": "#ffdbcc",
+                        "on-primary-container": "#572000",
+                        "on-secondary": "#1b247f",
+                        "tertiary": "#ffb3ac",
+                        "surface-container-high": "#202c32",
+                        "surface-tint": "#ffb693",
+                        "surface-variant": "#2a363d",
+                        "on-primary-fixed-variant": "#7a3000",
+                        "surface-container-lowest": "#041015",
+                        "primary-container": "#ff6b00",
+                        "on-secondary-fixed": "#000767",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "tertiary-fixed": "#ffdad6",
+                        "on-surface-variant": "#e2bfb0",
+                        "secondary-container": "#343d96",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#111d23",
+                        "secondary": "#bdc2ff",
+                        "surface-dim": "#09151a",
+                        "inverse-on-surface": "#263238",
+                        "surface-bright": "#2f3b41",
+                        "outline": "#a98a7d",
+                        "on-tertiary": "#680008",
+                        "error": "#ffb4ab",
+                        "on-background": "#d7e4ec",
+                        "inverse-surface": "#d7e4ec",
+                        "on-tertiary-container": "#6a0008",
+                        "tertiary-container": "#ff675e",
+                        "surface-container-highest": "#2a363d",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "inverse-primary": "#a04100",
+                        "on-primary-fixed": "#351000",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-surface": "#d7e4ec",
+                        "on-tertiary-fixed": "#410003",
+                        "secondary-fixed": "#e0e0ff",
+                        "on-primary": "#561f00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "24px",
+                        "gutter": "16px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "data-tabular": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-tabular": ["14px", { "lineHeight": "18px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .map-overlay {
+            background: linear-gradient(180deg, rgba(9,21,26,0.8) 0%, rgba(9,21,26,0) 15%, rgba(9,21,26,0) 85%, rgba(9,21,26,0.8) 100%);
+        }
+        .scanline {
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen w-screen overflow-hidden flex flex-col">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-background border-b border-outline-variant">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-display-lg font-bold text-primary">Volentify</span>
+<div class="hidden md:flex gap-6 h-full items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors h-full flex items-center font-body-md text-body-md" href="#">Dashboard</a>
+<a class="text-primary border-b-2 border-primary pb-1 h-full flex items-center font-body-md text-body-md hover:text-primary transition-colors" href="#">Tactical</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors h-full flex items-center font-body-md text-body-md" href="#">Insights</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors h-full flex items-center font-body-md text-body-md" href="#">Local Map</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-error text-on-error px-4 py-2 rounded-DEFAULT font-label-caps text-label-caps flex items-center gap-2 hover:bg-tertiary transition-colors animate-pulse">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">campaign</span>
+                Broadcast Alert
+            </button>
+<div class="flex gap-2">
+<button class="p-2 rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-full hover:bg-surface-variant transition-colors text-on-surface-variant hover:text-primary">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<img alt="Response Commander Profile" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="Close up portrait of a serious tactical commander wearing a dark communications headset. Professional, high contrast lighting emphasizing leadership and focus against a dark digital background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC_tHV8cApJgi92I5UBlWm1-DV2hIIg8Fm36Sz15tPD9jPVfsufQvSZkfdF4gIblYSvfszXfK_IQV3GrRk8eIT6fx76lsPN8rhTzT5VFjJUkX7x5Dj8ZbCeQ1jHFDsy4jenyyKbc6srD_ey0cIO2NdfZXCBhrhiDK7elFQMnNkfeUc207VRk56MQhsFsqzFsWHBEgZpxLozXosW9_BUJ0_VNFVgIo3fH96FdWPPhG56Y2yY1PdIeBB-Aw"/>
+</div>
+</nav>
+<div class="flex flex-1 pt-16 overflow-hidden">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 flex flex-col bg-surface-container border-r border-outline-variant font-label-caps text-label-caps">
+<div class="p-6 border-b border-outline-variant">
+<div class="flex items-center gap-4 mb-4">
+<img alt="Agency Logo" class="w-10 h-10 rounded-DEFAULT" data-alt="Minimalist vector logo of a shield with a geometric hazard symbol inside. Sharp angles, high contrast safety orange on dark grey background, modern corporate tactical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB_-4do8RfZotv16LAygCdF45V_PQUQDHZPFhIKhpx0glkLa0GkXj8buR-UDov1-QdsoJ5g-fMFa8SG24Vvo_DABzpGP4RTLQ-ZxptSwuYsucGA0TUNo3DnTf_E3riql6zyqKPJLWvh8V-4Cj2wgAUZDhugtE9nMOBs_a3iz00-e-4y_XKiAR4xW9gnb5fo2GmKbtyYEWEQUY1wTrIO6L5zlYHd9tLWGgJgJGJaiM1lsveV3X9-6G0tQg"/>
+<div>
+<h2 class="font-headline-lg text-headline-lg text-primary text-sm leading-tight">Disaster Filters</h2>
+<span class="text-on-surface-variant text-[10px]">Active Mitigation</span>
+</div>
+</div>
+</div>
+<div class="flex-1 py-4 flex flex-col gap-2 px-2 overflow-y-auto">
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-left">
+<span class="material-symbols-outlined">water_drop</span>
+<span>Floods</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg bg-secondary-container text-on-secondary-container font-bold translate-x-1 duration-200 text-left">
+<span class="material-symbols-outlined">local_fire_department</span>
+<span>Wildfires</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-left">
+<span class="material-symbols-outlined">volcano</span>
+<span>Earthquakes</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-left">
+<span class="material-symbols-outlined">cyclone</span>
+<span>Storms</span>
+</button>
+<button class="flex items-center gap-3 px-4 py-3 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all text-left">
+<span class="material-symbols-outlined">warning</span>
+<span>Hazmat</span>
+</button>
+</div>
+<div class="p-4 border-t border-outline-variant">
+<button class="w-full py-2 bg-primary text-on-primary rounded-DEFAULT hover:bg-primary-container transition-colors font-bold mb-4">
+                    Apply Filters
+                </button>
+<div class="flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span>Resources</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span>Support</span>
+</a>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-64 relative bg-surface">
+<!-- Central Map Area -->
+<div class="absolute inset-0 z-0">
+<div class="w-full h-full bg-cover bg-center" data-alt="High-contrast dark mode satellite map of North America showing glowing red and orange thermal hotspots indicating active wildfires. The terrain is rendered in deep blues and blacks with subtle glowing grid lines for a tactical command center feel." data-location="Global" style="background-image: url('https://www.gstatic.com/labs-code/stitch/stitch-placeholder-300x300.svg')"></div>
+<div class="absolute inset-0 map-overlay pointer-events-none"></div>
+<div class="absolute inset-0 scanline pointer-events-none opacity-20"></div>
+<!-- Map Markers (Simulated) -->
+<div class="absolute top-[40%] left-[30%] w-4 h-4 bg-error rounded-full animate-ping opacity-75"></div>
+<div class="absolute top-[40%] left-[30%] w-4 h-4 bg-error rounded-full border-2 border-white flex items-center justify-center shadow-[0_0_15px_rgba(255,180,171,0.5)]"></div>
+<div class="absolute top-[60%] left-[50%] w-3 h-3 bg-primary rounded-full animate-ping opacity-75"></div>
+<div class="absolute top-[60%] left-[50%] w-3 h-3 bg-primary rounded-full border border-white"></div>
+</div>
+<!-- Floating Widgets Panel (Right) -->
+<div class="absolute right-margin-desktop top-margin-desktop bottom-margin-desktop w-96 z-10 flex flex-col gap-gutter overflow-y-auto pr-2">
+<!-- Active Incident Card -->
+<div class="bg-surface-container-high/90 backdrop-blur-md border border-outline-variant p-4 rounded-lg flex flex-col gap-4 shadow-lg">
+<div class="flex justify-between items-start border-b border-outline-variant pb-2">
+<div>
+<span class="font-label-caps text-label-caps text-error flex items-center gap-1 mb-1">
+<span class="material-symbols-outlined text-[14px]">local_fire_department</span>
+                                CRITICAL INCIDENT
+                            </span>
+<h3 class="font-title-md text-title-md text-on-surface">Sector 7 Wildfire</h3>
+</div>
+<span class="px-2 py-1 bg-error/15 text-error border border-error/30 rounded-DEFAULT font-data-tabular text-data-tabular">ACT-01</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-1">Containment</span>
+<span class="font-data-tabular text-data-tabular text-on-surface text-xl">12%</span>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-1">Wind Speed</span>
+<span class="font-data-tabular text-data-tabular text-on-surface text-xl">45 km/h</span>
+</div>
+</div>
+<div>
+<span class="font-label-caps text-label-caps text-on-surface-variant block mb-2">Evacuation Countdown</span>
+<div class="bg-surface border border-outline-variant rounded p-2 text-center">
+<span class="font-data-tabular text-data-tabular text-primary text-2xl tracking-widest font-bold" id="countdown">02:14:59</span>
+</div>
+</div>
+<button class="w-full py-2 bg-surface-variant border border-outline-variant text-on-surface rounded-DEFAULT hover:bg-outline-variant transition-colors font-label-caps text-label-caps flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">target</span>
+                        Deploy Assets
+                    </button>
+</div>
+<!-- Telemetry Feed -->
+<div class="bg-surface-container-high/90 backdrop-blur-md border border-outline-variant p-4 rounded-lg flex flex-col gap-3 shadow-lg flex-1">
+<h3 class="font-title-md text-title-md text-on-surface border-b border-outline-variant pb-2">Live Telemetry</h3>
+<div class="flex flex-col gap-2 overflow-y-auto">
+<div class="flex items-center gap-3 p-2 bg-surface border border-outline-variant rounded">
+<span class="material-symbols-outlined text-primary">sensors</span>
+<div class="flex-1">
+<span class="block font-label-caps text-label-caps text-on-surface-variant text-[10px]">TEMP PROBE A-9</span>
+<span class="font-data-tabular text-data-tabular text-on-surface">420°C <span class="text-error">↑ Rapid Increase</span></span>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 bg-surface border border-outline-variant rounded">
+<span class="material-symbols-outlined text-secondary">air</span>
+<div class="flex-1">
+<span class="block font-label-caps text-label-caps text-on-surface-variant text-[10px]">AIR QUALITY MQ-135</span>
+<span class="font-data-tabular text-data-tabular text-on-surface">AQI 450 <span class="text-error">Hazardous</span></span>
+</div>
+</div>
+<div class="flex items-center gap-3 p-2 bg-surface border border-outline-variant rounded opacity-60">
+<span class="material-symbols-outlined text-on-surface-variant">satellite_alt</span>
+<div class="flex-1">
+<span class="block font-label-caps text-label-caps text-on-surface-variant text-[10px]">THERMAL IMAGING</span>
+<span class="font-data-tabular text-data-tabular text-on-surface">Scan complete. Awaiting pass.</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+        // Simple countdown logic for visual effect
+        let time = 2 * 3600 + 14 * 60 + 59; // 2:14:59 in seconds
+        const countdownEl = document.getElementById('countdown');
+        
+        setInterval(() => {
+            time--;
+            if(time < 0) time = 0;
+            const h = Math.floor(time / 3600).toString().padStart(2, '0');
+            const m = Math.floor((time % 3600) / 60).toString().padStart(2, '0');
+            const s = (time % 60).toString().padStart(2, '0');
+            if(countdownEl) countdownEl.innerText = `${h}:${m}:${s}`;
+        }, 1000);
+    </script>
+</body></html>
