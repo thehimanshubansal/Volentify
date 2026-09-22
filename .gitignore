@@ -7,3 +7,5 @@ __pycache__/
 
 # TypeScript build cache
 *.tsbuildinfo
+
+.env

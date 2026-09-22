@@ -1,9 +1,9 @@
 {
-  "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
+      "source": "/api/:match*",
       "destination": "/api/index.py"
     }
   ]
 }
+
