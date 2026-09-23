@@ -8,22 +8,14 @@ import {
   Maximize2, 
   Minimize2, 
   Search, 
-  Ruler, 
   CloudRain,
   Flame,
-  Wind,
-  Waves,
-  ShieldAlert,
-  Hospital,
-  Home,
   Users,
   Radio,
-  Zap,
-  Sun,
-  Filter,
   RefreshCw,
   Sparkles,
-  Navigation
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import MapLayerSelector from './MapLayerSelector';
 import MapTimelineSlider from './MapTimelineSlider';
@@ -67,6 +59,9 @@ export default function DisasterGISMap() {
 
   // Volunteer availability filter: 'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'
   const [volunteerFilter, setVolunteerFilter] = useState<'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'>('ALL');
+  const [isLayersOpen, setIsLayersOpen] = useState(false);
+  const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(false);
 
   // Layer Visibility State
   const [activeLayers, setActiveLayers] = useState({
@@ -82,7 +77,6 @@ export default function DisasterGISMap() {
   });
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [measurementActive, setMeasurementActive] = useState(false);
 
   // 1. Fetch Disasters and Volunteers in Parallel
   const fetchData = async () => {
@@ -97,9 +91,9 @@ export default function DisasterGISMap() {
       if (Array.isArray(disastersRes)) {
         const mappedDisasters: MapFeatureNode[] = disastersRes.map((d: any) => ({
           id: d.id,
-          name: d.name,
+          name: d.name || d.title || 'Disaster Incident',
           category: 'hazard',
-          subType: d.subType || 'Disaster',
+          subType: d.subType || d.category || 'Disaster',
           severity: d.severity || 'HIGH',
           lat: Number(d.lat),
           lng: Number(d.lng),
@@ -108,14 +102,11 @@ export default function DisasterGISMap() {
           updatedAt: d.updatedAt || 'Recently',
           location: d.location,
           state: d.state,
-          windSpeed: d.wind_speed,
-          rainfallMm: d.rainfall_mm,
-          affectedPop: d.affected_pop,
+          windSpeed: d.wind_speed ?? d.windSpeedKmh ?? d.windSpeed,
+          rainfallMm: d.rainfall_mm ?? d.rainfallMm,
+          affectedPop: d.affected_pop ?? d.affectedPop,
         }));
         setDisasterNodes(mappedDisasters);
-        if (mappedDisasters.length > 0 && !selectedNode) {
-          setSelectedNode(mappedDisasters[0]);
-        }
       }
 
       // Map Volunteers
@@ -163,14 +154,13 @@ export default function DisasterGISMap() {
       console.warn('Status sync error:', e);
     }
 
-    // Optimistically update local state
     setVolunteerNodes(prev => prev.map(v => v.id === volunteerId ? { ...v, status: newStatus } : v));
     if (selectedNode && selectedNode.id === volunteerId) {
       setSelectedNode(prev => prev ? { ...prev, status: newStatus } : null);
     }
   };
 
-  // 2. Initialize MapLibre GL Canvas
+  // 2. Initialize MapLibre GL Canvas with Free ESRI Dark Canvas GIS
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -180,21 +170,21 @@ export default function DisasterGISMap() {
       style: {
         version: 8,
         sources: {
-          'osm-tiles': {
+          'dark-matter-tiles': {
             type: 'raster',
             tiles: [
-              'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-              'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+              'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+              'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
             ],
             tileSize: 256,
-            attribution: '&copy; OpenStreetMap & CartoDB',
+            attribution: '&copy; Esri & OpenStreetMap contributors',
           },
         },
         layers: [
           {
-            id: 'osm-tiles-layer',
+            id: 'dark-matter-layer',
             type: 'raster',
-            source: 'osm-tiles',
+            source: 'dark-matter-tiles',
             minzoom: 0,
             maxzoom: 19,
           },
@@ -225,9 +215,7 @@ export default function DisasterGISMap() {
         source: 'disaster-heatmap-source',
         maxzoom: 15,
         paint: {
-          // Increase heatmap weight based on disaster severity
           'heatmap-weight': ['get', 'weight'],
-          // Increase intensity as user zooms in
           'heatmap-intensity': [
             'interpolate',
             ['linear'],
@@ -235,19 +223,17 @@ export default function DisasterGISMap() {
             0, 1,
             9, 3
           ],
-          // Radiant Dark-Theme Heatmap Gradient
           'heatmap-color': [
             'interpolate',
             ['linear'],
             ['heatmap-density'],
             0, 'rgba(0, 0, 0, 0)',
-            0.2, 'rgba(56, 189, 248, 0.4)',  // Sky blue
-            0.4, 'rgba(34, 197, 94, 0.6)',   // Emerald
-            0.6, 'rgba(234, 179, 8, 0.8)',   // Amber
-            0.8, 'rgba(249, 115, 22, 0.9)',  // Vibrant Orange
-            1.0, 'rgba(239, 68, 68, 0.98)'   // Glowing Crimson
+            0.2, 'rgba(56, 189, 248, 0.4)',
+            0.4, 'rgba(34, 197, 94, 0.6)',
+            0.6, 'rgba(234, 179, 8, 0.8)',
+            0.8, 'rgba(249, 115, 22, 0.9)',
+            1.0, 'rgba(239, 68, 68, 0.98)'
           ],
-          // Adjust radius by zoom level
           'heatmap-radius': [
             'interpolate',
             ['linear'],
@@ -257,7 +243,6 @@ export default function DisasterGISMap() {
             8, 45,
             12, 70
           ],
-          // Smoothly fade heatmap as user zooms in to inspect exact ground units
           'heatmap-opacity': [
             'interpolate',
             ['linear'],
@@ -274,7 +259,7 @@ export default function DisasterGISMap() {
         await addRainViewerRadarLayer(map);
       }
 
-      // Add Sample Tactical Flood/Cyclone Hazard Buffer Polygon
+      // Add Tactical Hazard Zone Polygon
       const sampleBuffer = generateHazardBufferGeoJSON(85.8312, 19.8135, 45.0);
       map.addSource('hazard-zone-buffer', {
         type: 'geojson',
@@ -458,7 +443,6 @@ export default function DisasterGISMap() {
     const map = mapRef.current;
     if (!map) return;
 
-    // Clear previous markers
     markersRef.current.forEach(m => m.remove());
     markersRef.current = [];
 
@@ -535,149 +519,167 @@ export default function DisasterGISMap() {
     return { total, available, busy, offline };
   }, [volunteerNodes]);
 
+  const activeLayersCount = Object.values(activeLayers).filter(Boolean).length;
+
   return (
     <div className="relative w-full h-[calc(100vh-5rem)] bg-surface-lowest overflow-hidden font-telemetry select-none">
       
       {/* Map Canvas Container */}
       <div ref={mapContainerRef} className="w-full h-full" />
 
-      {/* Floating Tactical Header Bar (Search & Quick Action Tools) */}
-      <div className="absolute top-4 left-4 right-4 z-20 flex flex-col md:flex-row items-center justify-between gap-3 pointer-events-none">
+      {/* Unified Sleek Top HUD Bar */}
+      <div className="absolute top-4 left-4 right-4 z-30 flex flex-wrap items-center justify-between gap-2.5 pointer-events-none">
         
-        {/* Search Bar with Node Counts */}
-        <div className="w-full md:w-[420px] bg-surface-low/95 backdrop-blur-xl p-2 rounded-xl border border-surface-highest shadow-tactical flex items-center space-x-2 pointer-events-auto">
-          <Search className="w-4 h-4 text-primary ml-2 shrink-0" />
-          <input
-            type="text"
-            placeholder="Search Cyclone, Flood, State, or Paramedic..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-xs text-tactical-text focus:outline-none placeholder-tactical-muted font-sans"
-          />
-          {searchQuery && (
-            <button 
-              onClick={() => setSearchQuery('')}
-              className="text-[10px] text-tactical-muted hover:text-tactical-text px-1"
-            >
-              Clear
-            </button>
-          )}
-          <div className="flex items-center space-x-1 shrink-0">
-            <span className="px-2 py-0.5 rounded bg-emergency/20 text-emergency text-[10px] font-bold border border-emergency/30">
+        {/* Left: Search & Metrics */}
+        <div className="flex items-center space-x-2 bg-surface-low/95 backdrop-blur-xl p-1.5 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto">
+          <div className="flex items-center space-x-2 pl-2 pr-1 py-0.5">
+            <Search className="w-4 h-4 text-primary shrink-0" />
+            <input
+              type="text"
+              placeholder="Search Cyclone, Flood, State, or Paramedic..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-44 sm:w-64 bg-transparent text-xs text-tactical-text focus:outline-none placeholder-tactical-muted font-sans"
+            />
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="text-[10px] text-tactical-muted hover:text-tactical-text px-1"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="hidden sm:flex items-center space-x-1 pl-1 border-l border-surface-highest">
+            <span className="px-2 py-0.5 rounded-lg bg-emergency/20 text-emergency text-[10px] font-bold border border-emergency/30">
               {disasterNodes.length} HAZARDS
-            </span>
-            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-bold border border-emerald-500/30">
-              {volunteerStats.available} VOLUNTEERS
             </span>
           </div>
         </div>
 
-        {/* Tactical Action Tools & Heatmap Toggle */}
-        <div className="flex items-center space-x-2 bg-surface-low/95 backdrop-blur-xl p-1.5 rounded-xl border border-surface-highest shadow-tactical pointer-events-auto text-tactical-text">
+        {/* Center: Volunteer Status Filter Pills */}
+        <div className="hidden lg:flex items-center space-x-1 bg-surface-low/95 backdrop-blur-xl p-1 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto">
+          <span className="text-[10px] text-tactical-muted uppercase font-bold px-2 flex items-center space-x-1">
+            <Users className="w-3.5 h-3.5 text-primary" />
+            <span>Volunteers:</span>
+          </span>
+
+          <button
+            onClick={() => setVolunteerFilter('ALL')}
+            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
+              volunteerFilter === 'ALL'
+                ? 'bg-primary text-surface-lowest shadow-sm'
+                : 'text-tactical-muted hover:text-tactical-text hover:bg-surface-high'
+            }`}
+          >
+            All ({volunteerStats.total})
+          </button>
+
+          <button
+            onClick={() => setVolunteerFilter('AVAILABLE')}
+            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
+              volunteerFilter === 'AVAILABLE'
+                ? 'bg-emerald-500 text-surface-lowest shadow-sm'
+                : 'text-emerald-400 hover:bg-emerald-500/10'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Available ({volunteerStats.available})</span>
+          </button>
+
+          <button
+            onClick={() => setVolunteerFilter('BUSY')}
+            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
+              volunteerFilter === 'BUSY'
+                ? 'bg-amber-500 text-surface-lowest shadow-sm'
+                : 'text-amber-400 hover:bg-amber-500/10'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>Deployed ({volunteerStats.busy})</span>
+          </button>
+
+          <button
+            onClick={() => setVolunteerFilter('OFFLINE')}
+            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
+              volunteerFilter === 'OFFLINE'
+                ? 'bg-slate-500 text-surface-lowest shadow-sm'
+                : 'text-slate-400 hover:bg-slate-500/10'
+            }`}
+          >
+            <span>Standby ({volunteerStats.offline})</span>
+          </button>
+        </div>
+
+        {/* Right: Quick Action Controls */}
+        <div className="flex items-center space-x-1.5 bg-surface-low/95 backdrop-blur-xl p-1 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto text-tactical-text">
           
-          {/* Heatmap Quick Toggle */}
+          {/* Heatmap Toggle */}
           <button
             onClick={() => setActiveLayers(prev => ({ ...prev, severityHeatmap: !prev.severityHeatmap }))}
-            className={`p-2 rounded-lg text-xs flex items-center space-x-1.5 transition-all ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
               activeLayers.severityHeatmap ? 'bg-primary/20 text-primary border border-primary/40 shadow-sm' : 'hover:bg-surface-high text-tactical-muted'
             }`}
             title="Toggle GPU Disaster Severity Heatmap"
           >
-            <Flame className={`w-4 h-4 ${activeLayers.severityHeatmap ? 'text-primary' : 'text-tactical-muted'}`} />
+            <Flame className={`w-3.5 h-3.5 ${activeLayers.severityHeatmap ? 'text-primary' : 'text-tactical-muted'}`} />
             <span className="hidden sm:inline text-[11px] font-bold">Heatmap</span>
           </button>
 
           {/* Rain Radar Toggle */}
           <button
             onClick={() => setActiveLayers(prev => ({ ...prev, weatherRadar: !prev.weatherRadar }))}
-            className={`p-2 rounded-lg text-xs flex items-center space-x-1.5 transition-all ${
+            className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
               activeLayers.weatherRadar ? 'bg-primary/20 text-primary border border-primary/40 shadow-sm' : 'hover:bg-surface-high text-tactical-muted'
             }`}
             title="Toggle Live RainViewer Radar"
           >
-            <CloudRain className="w-4 h-4 text-primary" />
-            <span className="hidden sm:inline text-[11px] font-bold">Rain Radar</span>
+            <CloudRain className="w-3.5 h-3.5 text-primary" />
+            <span className="hidden sm:inline text-[11px] font-bold">Radar</span>
+          </button>
+
+          {/* GIS Layers Dropdown Trigger */}
+          <button
+            onClick={() => setIsLayersOpen(!isLayersOpen)}
+            className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
+              isLayersOpen ? 'bg-primary text-surface-lowest font-bold' : 'hover:bg-surface-high text-tactical-text'
+            }`}
+            title="Toggle GIS Layers Menu"
+          >
+            <Layers className="w-3.5 h-3.5" />
+            <span className="text-[11px] font-bold">Layers ({activeLayersCount})</span>
           </button>
 
           {/* Refresh Data */}
           <button
             onClick={fetchData}
             disabled={loading}
-            className="p-2 rounded-lg hover:bg-surface-high text-xs transition-colors text-tactical-muted hover:text-tactical-text"
+            className="p-1.5 rounded-xl hover:bg-surface-high text-xs transition-colors text-tactical-muted hover:text-tactical-text"
             title="Refresh Live GIS Feeds"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-primary' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-primary' : ''}`} />
           </button>
 
           {/* Fullscreen */}
           <button
             onClick={toggleFullscreen}
-            className="p-2 rounded-lg hover:bg-surface-high text-xs transition-colors"
+            className="p-1.5 rounded-xl hover:bg-surface-high text-xs transition-colors"
             title="Toggle Fullscreen GIS"
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
-      {/* Floating Volunteer Status Filter Bar (Top Center) */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 hidden md:flex items-center space-x-1 bg-surface-low/90 backdrop-blur-xl p-1 rounded-xl border border-surface-highest shadow-tactical">
-        <span className="text-[10px] text-tactical-muted uppercase font-bold px-2 flex items-center space-x-1">
-          <Users className="w-3 h-3 text-primary" />
-          <span>Volunteers:</span>
-        </span>
+      {/* Layer Selector Dropdown Component */}
+      <MapLayerSelector 
+        activeLayers={activeLayers} 
+        setActiveLayers={setActiveLayers} 
+        isOpen={isLayersOpen} 
+        onClose={() => setIsLayersOpen(false)} 
+      />
 
-        <button
-          onClick={() => setVolunteerFilter('ALL')}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
-            volunteerFilter === 'ALL'
-              ? 'bg-primary text-surface-lowest shadow-sm'
-              : 'text-tactical-muted hover:text-tactical-text hover:bg-surface-high'
-          }`}
-        >
-          All ({volunteerStats.total})
-        </button>
-
-        <button
-          onClick={() => setVolunteerFilter('AVAILABLE')}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
-            volunteerFilter === 'AVAILABLE'
-              ? 'bg-emerald-500 text-surface-lowest shadow-sm'
-              : 'text-emerald-400 hover:bg-emerald-500/10'
-          }`}
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>Available ({volunteerStats.available})</span>
-        </button>
-
-        <button
-          onClick={() => setVolunteerFilter('BUSY')}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
-            volunteerFilter === 'BUSY'
-              ? 'bg-amber-500 text-surface-lowest shadow-sm'
-              : 'text-amber-400 hover:bg-amber-500/10'
-          }`}
-        >
-          <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-          <span>Deployed ({volunteerStats.busy})</span>
-        </button>
-
-        <button
-          onClick={() => setVolunteerFilter('OFFLINE')}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
-            volunteerFilter === 'OFFLINE'
-              ? 'bg-slate-500 text-surface-lowest shadow-sm'
-              : 'text-slate-400 hover:bg-slate-500/10'
-          }`}
-        >
-          <span>Standby ({volunteerStats.offline})</span>
-        </button>
-      </div>
-
-      {/* Floating Layer Controls (Top Right) */}
-      <MapLayerSelector activeLayers={activeLayers} setActiveLayers={setActiveLayers} />
-
-      {/* Slide-Out Detail Panel for Selected Marker */}
+      {/* Slide-In Inspector Drawer (Appears Only When Marker is Clicked) */}
       {selectedNode && (
         <MapPopupPanel 
           node={selectedNode} 
@@ -686,54 +688,76 @@ export default function DisasterGISMap() {
         />
       )}
 
-      {/* Timeline Playback Slider (Bottom Center) */}
-      <MapTimelineSlider />
+      {/* Collapsible Minimal Bottom HUD Toolbar (Timeline & Legend) */}
+      <div className="absolute bottom-4 left-4 right-4 z-20 flex items-end justify-between pointer-events-none">
+        
+        {/* Compact Legend Pill */}
+        <div className="bg-surface-low/95 backdrop-blur-xl p-2 rounded-2xl border border-surface-highest shadow-2xl pointer-events-auto">
+          <button 
+            onClick={() => setIsLegendOpen(!isLegendOpen)}
+            className="flex items-center space-x-2 text-xs font-bold text-tactical-text px-1"
+          >
+            <Radio className="w-3.5 h-3.5 text-primary animate-pulse" />
+            <span className="text-[11px]">Legend</span>
+            {isLegendOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+          </button>
 
-      {/* Live Tactical Map Legend (Bottom Left) */}
-      <div className="absolute bottom-16 left-4 z-20 bg-surface-low/95 backdrop-blur-xl p-3.5 rounded-xl border border-surface-highest text-xs font-telemetry space-y-2 shadow-2xl hidden sm:block max-w-xs">
-        <div className="text-[10px] text-tactical-muted uppercase font-bold tracking-wider border-b border-surface-highest pb-1.5 flex items-center justify-between">
-          <div className="flex items-center space-x-1.5">
-            <Radio className="w-3 h-3 text-primary animate-pulse" />
-            <span>DISASTER TELEMETRY LEGEND</span>
-          </div>
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-        </div>
-
-        {/* Hazard Types */}
-        <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-violet-500"></span>
-            <span className="text-tactical-text">Cyclone 🌀</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
-            <span className="text-tactical-text">Flood 🌊</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-            <span className="text-tactical-text">Wildfire 🔥</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-            <span className="text-tactical-text">Landslide ⛰️</span>
-          </div>
-        </div>
-
-        <div className="border-t border-surface-highest/60 pt-1.5 space-y-1">
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-tactical-muted">SEVERITY HEATMAP:</span>
-            <div className="flex items-center space-x-0.5">
-              <span className="w-3 h-2 rounded-l bg-sky-400" title="Low"></span>
-              <span className="w-3 h-2 bg-emerald-500" title="Moderate"></span>
-              <span className="w-3 h-2 bg-amber-400" title="High"></span>
-              <span className="w-3 h-2 rounded-r bg-red-500" title="Critical"></span>
+          {isLegendOpen && (
+            <div className="mt-2 pt-2 border-t border-surface-highest/80 space-y-1.5 text-[10px] animate-in fade-in-50 duration-150">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-violet-500"></span>
+                  <span>Cyclone 🌀</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                  <span>Flood 🌊</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                  <span>Wildfire 🔥</span>
+                </div>
+                <div className="flex items-center space-x-1.5">
+                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                  <span>Landslide ⛰️</span>
+                </div>
+              </div>
+              <div className="flex items-center space-x-1.5 pt-1 border-t border-surface-highest/50">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-emerald-400 font-bold">Active Responder</span>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center space-x-1.5 text-[11px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-tactical-text">Active Available Responder</span>
-          </div>
+          )}
         </div>
+
+        {/* Timeline Slider Center Bar */}
+        <div className="pointer-events-auto w-full max-w-lg mx-auto">
+          {isTimelineOpen ? (
+            <div className="relative">
+              <button 
+                onClick={() => setIsTimelineOpen(false)}
+                className="absolute -top-7 right-0 text-[10px] text-tactical-muted hover:text-tactical-text bg-surface-low/90 px-2 py-0.5 rounded-lg border border-surface-highest"
+              >
+                Hide Timeline ✕
+              </button>
+              <MapTimelineSlider />
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <button
+                onClick={() => setIsTimelineOpen(true)}
+                className="px-3 py-1.5 rounded-xl bg-surface-low/90 backdrop-blur-xl border border-surface-highest/80 text-[11px] font-bold text-tactical-text hover:text-primary shadow-tactical flex items-center space-x-1.5 transition-all"
+              >
+                <Radio className="w-3.5 h-3.5 text-primary" />
+                <span>Simulation Timeline (48h)</span>
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Empty placeholder for balance */}
+        <div className="w-20 hidden md:block"></div>
       </div>
 
     </div>

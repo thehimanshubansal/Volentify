@@ -208,13 +208,13 @@ export default function MapPopupPanel({ node, onClose, onStatusChange }: MapPopu
         {/* Hazard Specific Telemetry Metrics */}
         {!isVolunteer && node.category === 'hazard' && (
           <div className="grid grid-cols-3 gap-1.5 text-center">
-            {node.windSpeed !== undefined && (
+            {node.windSpeed != null && !isNaN(Number(node.windSpeed)) && (
               <div className="p-1.5 rounded-lg bg-surface-high border border-surface-highest">
                 <span className="text-[9px] text-tactical-muted block">WIND SPEED</span>
                 <span className="font-bold text-primary font-mono text-xs">{node.windSpeed} km/h</span>
               </div>
             )}
-            {node.rainfallMm !== undefined && (
+            {node.rainfallMm != null && !isNaN(Number(node.rainfallMm)) && (
               <div className="p-1.5 rounded-lg bg-surface-high border border-surface-highest">
                 <span className="text-[9px] text-tactical-muted block">RAINFALL</span>
                 <span className="font-bold text-cyan-400 font-mono text-xs">{node.rainfallMm} mm</span>
@@ -228,6 +228,7 @@ export default function MapPopupPanel({ node, onClose, onStatusChange }: MapPopu
             )}
           </div>
         )}
+
 
         {/* Field Details / Brief */}
         <div>
