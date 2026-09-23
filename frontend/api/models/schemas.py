@@ -108,3 +108,17 @@ class InfraFacilitySchema(BaseModel):
     status: str
     osm_id: Optional[int] = None
     data_mode: DataMode
+
+# --- Authentication ---
+
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    phone: str
+    state_district: str
+    role: str
+    password: str
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str

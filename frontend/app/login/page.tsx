@@ -10,13 +10,41 @@ export default function LoginPage() {
   const [role, setRole] = useState<'citizen' | 'volunteer' | 'ngo' | 'agency' | 'admin'>('volunteer');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (role === 'admin') {
-      router.push('/admin');
-    } else {
-      router.push('/dashboard');
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Login failed');
+      }
+
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      if (data.user.role === 'admin' || role === 'admin') {
+        router.push('/admin');
+      } else if (data.user.role === 'volunteer' || role === 'volunteer') {
+        router.push('/volunteer');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -32,6 +60,8 @@ export default function LoginPage() {
           <h1 className="text-xl font-bold text-tactical-text">COMMAND AUTHENTICATION</h1>
           <p className="text-xs text-tactical-muted">VOLENTIFY 2.0 NATIONAL PORTAL</p>
         </div>
+
+        {error && <div className="p-2 bg-red-900/50 border border-red-500 text-red-200 text-xs rounded text-center">{error}</div>}
 
         {/* Role Selector Tabs */}
         <div className="grid grid-cols-3 gap-1 bg-surface-lowest p-1 rounded-lg text-[10px] font-bold">
@@ -82,10 +112,11 @@ export default function LoginPage() {
           </div>
 
           <button
+            disabled={loading}
             type="submit"
-            className="w-full py-3 rounded bg-primary text-surface-lowest font-bold text-xs hover:bg-primary-tint transition-colors flex items-center justify-center space-x-2"
+            className="w-full py-3 rounded bg-primary text-surface-lowest font-bold text-xs hover:bg-primary-tint transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
           >
-            <span>AUTHENTICATE PORTAL</span>
+            <span>{loading ? 'AUTHENTICATING...' : 'AUTHENTICATE PORTAL'}</span>
             <ArrowRight className="w-4 h-4" />
           </button>
         </form>

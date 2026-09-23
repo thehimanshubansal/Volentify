@@ -113,6 +113,30 @@ export default function VolunteerPage() {
   const [userLng, setUserLng] = useState(85.80);
   const [locationName, setLocationName] = useState('Puri Coast, Odisha');
   const [acceptedMissions, setAcceptedMissions] = useState<string[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [loadingTasks, setLoadingTasks] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/tasks')
+      .then(res => res.json())
+      .then(data => {
+         if (Array.isArray(data) && data.length > 0) {
+           setTasks(data);
+         }
+      })
+      .catch(err => {
+         console.error(err);
+      })
+      .finally(() => setLoadingTasks(false));
+
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user.name) setVolunteerName(user.name);
+      } catch (e) {}
+    }
+  }, []);
 
   // Compute live match score based on research paper formula:
   // Score = UrgencyWeight * SkillScore * ProximityScore * AvailabilityMultiplier
@@ -139,7 +163,7 @@ export default function VolunteerPage() {
     'Blood Donor': ['Medical & First Aid', 'Paramedic']
   };
 
-  const rankedTasks = INITIAL_TASKS.map((task) => {
+  const rankedTasks = tasks.map((task) => {
     const dist = haversineDistance(userLat, userLng, task.lat, task.lng);
     const urgencyW = urgencyWeights[task.urgency] || 1.0;
     
@@ -168,9 +192,38 @@ export default function VolunteerPage() {
     };
   }).sort((a, b) => b.compositeScore - a.compositeScore);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setRegistered(true);
+    try {
+      const userStr = localStorage.getItem('user');
+      let userId = null;
+      if (userStr) {
+        userId = JSON.parse(userStr).id;
+      }
+      
+      const res = await fetch('/api/volunteer/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: userId,
+          name: volunteerName,
+          skills: [primarySkill],
+          equipment: [],
+          availability_status: availability,
+          lat: userLat,
+          lng: userLng,
+          rating: 5.0
+        })
+      });
+
+      if (res.ok) {
+        setRegistered(true);
+      } else {
+         console.error('Failed to save profile');
+      }
+    } catch(err) {
+      console.error(err);
+    }
   };
 
   const handleAccept = (taskId: string) => {

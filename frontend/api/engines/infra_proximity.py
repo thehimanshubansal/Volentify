@@ -1,8 +1,7 @@
 import math
-import httpx
+import httpx # pyrefly: ignore [missing-import]
 from typing import List, Dict, Optional
 from api.models.schemas import InfraFacilitySchema, DataMode
-from api.data.mock_data import FALLBACK_INFRA
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 OVERPASS_QUERY = """
@@ -68,7 +67,7 @@ class InfraProximityEngine:
         query = OVERPASS_QUERY.format(lat=lat, lng=lng, radius_m=radius_m)
         
         facilities = []
-        data_mode = DataMode.DEMO
+        data_mode = DataMode.LIVE
         
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
@@ -76,7 +75,6 @@ class InfraProximityEngine:
                 
                 if response.status_code == 200:
                     data = response.json()
-                    data_mode = DataMode.LIVE
                     
                     for el in data.get("elements", []):
                         # Extract coords
@@ -104,29 +102,7 @@ class InfraProximityEngine:
                         ))
         except Exception as e:
             print(f"Overpass API failed: {e}")
-        
-        # Fallback to mock data if empty or failed
-        if not facilities:
-            data_mode = DataMode.DEMO
-            # Try to match city broadly (very crude)
-            city_key = "delhi"
-            if lat < 25 and lng > 80:
-                city_key = "guwahati"
-            
-            fallback_list = FALLBACK_INFRA.get(city_key, [])
-            for f in fallback_list:
-                dist = haversine_distance(lat, lng, f["lat"], f["lng"])
-                if dist <= radius_km:
-                    status = InfraProximityEngine.get_status_from_distance(dist)
-                    facilities.append(InfraFacilitySchema(
-                        name=f["name"],
-                        type=f["type"],
-                        lat=f["lat"],
-                        lng=f["lng"],
-                        distance_km=dist,
-                        status=status,
-                        data_mode=data_mode
-                    ))
+            return {"facilities": [], "data_mode": DataMode.DEMO}
 
         return {
             "facilities": sorted(facilities, key=lambda x: x.distance_km),

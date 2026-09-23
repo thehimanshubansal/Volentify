@@ -9,7 +9,7 @@ if current_dir not in sys.path:
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any
 
@@ -17,11 +17,9 @@ from api.models.schemas import (
     TaskSchema, VolunteerSchema, RankedMatchSchema,
     RawReportSchema, DeduplicatedEventSchema,
     EvidenceSchema, SituationBriefingSchema,
-    InfraFacilitySchema
+    InfraFacilitySchema, RegisterRequest, LoginRequest
 )
-from api.data.mock_data import (
-    MOCK_TASKS, MOCK_VOLUNTEERS, MOCK_REPORTS, MOCK_EVIDENCE, FALLBACK_INFRA
-)
+from api.db.database import supabase
 from api.engines.resource_matcher import ResourceMatcher
 from api.engines.event_dedup import EventDeduplicator
 from api.engines.situation_briefing import SituationBriefingEngine
@@ -60,45 +58,27 @@ class PredictionResponseSchema(BaseModel):
     predicted_surge_m: float
     confidence_score: float
 
-MOCK_DISASTERS = [
-    {
-        "id": "node-1",
-        "name": "Cyclone Remal Center",
-        "category": "hazard",
-        "subType": "Cyclone",
-        "severity": "CRITICAL",
-        "lat": 19.8135,
-        "lng": 85.8312,
-        "details": "Category 3 Hurricane force winds (140 km/h) approaching Puri & Paradip coast.",
-        "status": "Active Warning",
-        "updatedAt": "10 mins ago"
-    },
-    {
-        "id": "node-2",
-        "name": "Guwahati Brahmaputra Inundation Zone",
-        "category": "hazard",
-        "subType": "Flood",
-        "severity": "CRITICAL",
-        "lat": 26.1445,
-        "lng": 91.7362,
-        "details": "River level 1.8m above danger mark. Evacuation order in 12 villages.",
-        "status": "Evacuation in Progress",
-        "updatedAt": "5 mins ago"
-    }
-]
-
 @app.get("/api/health")
 def read_health():
+    db_status = "ONLINE" if supabase else "OFFLINE"
     return {
         "status": "ONLINE",
         "system": "VOLENTIFY DISASTER INTELLIGENCE PLATFORM",
         "version": "2.0.0",
-        "platform": "VERCEL SERVERLESS PYTHON"
+        "platform": "VERCEL SERVERLESS PYTHON",
+        "database": db_status
     }
 
 @app.get("/api/disasters", response_model=list[HazardNodeSchema])
 def get_disasters():
-    return MOCK_DISASTERS
+    if not supabase:
+        return []
+    try:
+        response = supabase.table("disasters").select("*").execute()
+        return response.data
+    except Exception as e:
+        print(f"Error fetching from Supabase: {e}")
+        return []
 
 @app.post("/api/predict", response_model=PredictionResponseSchema)
 def predict_hazard(data: PredictionRequestSchema):
@@ -112,22 +92,76 @@ def predict_hazard(data: PredictionRequestSchema):
         "confidence_score": 0.948
     }
 
+# --- Authentication & Volunteer Routes ---
+@app.post("/api/auth/register")
+def auth_register(req: RegisterRequest):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    try:
+        existing = supabase.table("users").select("*").eq("email", req.email).execute()
+        if existing.data and len(existing.data) > 0:
+            raise HTTPException(status_code=400, detail="Email already registered")
+        
+        new_user = {
+            "name": req.name,
+            "email": req.email,
+            "phone": req.phone,
+            "state_district": req.state_district,
+            "role": req.role,
+            "password": req.password
+        }
+        res = supabase.table("users").insert(new_user).execute()
+        if not res.data:
+            raise HTTPException(status_code=500, detail="Registration failed")
+        return {"status": "success", "user": res.data[0]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/auth/login")
+def auth_login(req: LoginRequest):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    try:
+        res = supabase.table("users").select("*").eq("email", req.email).execute()
+        if not res.data or len(res.data) == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user = res.data[0]
+        if user["password"] != req.password:
+            raise HTTPException(status_code=401, detail="Invalid password")
+            
+        return {"status": "success", "user": user}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/tasks")
+def get_tasks():
+    if not supabase:
+        return []
+    try:
+        res = supabase.table("tasks").select("*").execute()
+        return res.data
+    except Exception as e:
+        print(f"Error fetching tasks: {e}")
+        return []
+
+@app.post("/api/volunteer/profile")
+def create_volunteer_profile(profile: dict = Body(...)):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Database not configured")
+    try:
+        res = supabase.table("volunteers").insert(profile).execute()
+        return {"status": "success", "profile": res.data[0] if res.data else None}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # --- Feature 1: Resource Matching ---
 
-@app.get("/api/match/demo", response_model=Dict[str, List[RankedMatchSchema]])
-def match_demo():
-    # Return batch matching for all mock tasks and volunteers
-    return ResourceMatcher.batch_match(MOCK_TASKS, MOCK_VOLUNTEERS)
-
 @app.post("/api/match", response_model=List[RankedMatchSchema])
-def match_task(task: TaskSchema, volunteers: List[VolunteerSchema] = Body(default=MOCK_VOLUNTEERS)):
+def match_task(task: TaskSchema, volunteers: List[VolunteerSchema] = Body(...)):
     return ResourceMatcher.match_task(task, volunteers)
 
 # --- Feature 4: Event Deduplication ---
-
-@app.get("/api/events/demo", response_model=List[DeduplicatedEventSchema])
-def events_demo():
-    return EventDeduplicator.deduplicate(MOCK_REPORTS)
 
 @app.post("/api/events/ingest", response_model=List[DeduplicatedEventSchema])
 def events_ingest(reports: List[RawReportSchema]):
@@ -135,22 +169,11 @@ def events_ingest(reports: List[RawReportSchema]):
 
 # --- Feature 7: Situation Briefing ---
 
-@app.get("/api/briefing/demo", response_model=SituationBriefingSchema)
-def briefing_demo():
-    event_label = "Assam Flood"
-    location = "Guwahati"
-    return SituationBriefingEngine.generate_briefing("EVT-001", event_label, location, MOCK_EVIDENCE)
-
 @app.post("/api/briefing/generate", response_model=SituationBriefingSchema)
 def briefing_generate(event_id: str = Body(...), event_label: str = Body(...), location: str = Body(...), evidence: List[EvidenceSchema] = Body(...)):
     return SituationBriefingEngine.generate_briefing(event_id, event_label, location, evidence)
 
 # --- Feature 11: Infrastructure Proximity ---
-
-@app.get("/api/infrastructure/demo")
-async def infrastructure_demo():
-    # Demo for Delhi coordinates
-    return await InfraProximityEngine.get_nearby_infrastructure(28.6139, 77.2090, 10.0)
 
 @app.post("/api/infrastructure/nearby")
 async def infrastructure_nearby(lat: float = Body(...), lng: float = Body(...), radius_km: float = Body(10.0)):
