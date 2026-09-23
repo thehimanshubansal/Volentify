@@ -57,6 +57,44 @@ export default function DisasterGISMap() {
   const [selectedNode, setSelectedNode] = useState<MapFeatureNode | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Basemap style options
+  const BASEMAPS = {
+    voyager: {
+      name: '🗺️ Real Map',
+      tiles: [
+        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+      ],
+      attribution: '&copy; OpenStreetMap & CARTO',
+    },
+    satellite: {
+      name: '🛰️ Satellite HD',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      ],
+      attribution: '&copy; Esri World Imagery',
+    },
+    dark: {
+      name: '🌑 Dark Tactical',
+      tiles: [
+        'https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
+        'https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
+        'https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
+      ],
+      attribution: '&copy; OpenStreetMap & CARTO',
+    },
+    topo: {
+      name: '⛰️ Topographic',
+      tiles: [
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+      ],
+      attribution: '&copy; Esri Topo',
+    },
+  };
+
+  const [selectedBasemap, setSelectedBasemap] = useState<keyof typeof BASEMAPS>('voyager');
+
   // Volunteer availability filter: 'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'
   const [volunteerFilter, setVolunteerFilter] = useState<'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'>('ALL');
   const [isLayersOpen, setIsLayersOpen] = useState(false);
@@ -68,7 +106,8 @@ export default function DisasterGISMap() {
     severityHeatmap: true,
     disasters: true,
     volunteers: true,
-    weatherRadar: true,
+    weatherRadar: false, // Default false to keep real basemap clean
+    hazardZones: true,
     bhuvanWms: false,
     cyclone: true,
     flood: true,
@@ -160,9 +199,11 @@ export default function DisasterGISMap() {
     }
   };
 
-  // 2. Initialize MapLibre GL Canvas with Free ESRI Dark Canvas GIS
+  // 2. Initialize MapLibre GL Canvas with Selected Real-World Basemap
   useEffect(() => {
     if (!mapContainerRef.current) return;
+
+    const currentBase = BASEMAPS[selectedBasemap] || BASEMAPS.voyager;
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
@@ -170,21 +211,18 @@ export default function DisasterGISMap() {
       style: {
         version: 8,
         sources: {
-          'dark-matter-tiles': {
+          'basemap-tiles': {
             type: 'raster',
-            tiles: [
-              'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-              'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-            ],
+            tiles: currentBase.tiles,
             tileSize: 256,
-            attribution: '&copy; Esri & OpenStreetMap contributors',
+            attribution: currentBase.attribution,
           },
         },
         layers: [
           {
-            id: 'dark-matter-layer',
+            id: 'basemap-layer',
             type: 'raster',
-            source: 'dark-matter-tiles',
+            source: 'basemap-tiles',
             minzoom: 0,
             maxzoom: 19,
           },
@@ -192,7 +230,7 @@ export default function DisasterGISMap() {
       },
       center: [78.9629, 20.5937], // Centered on India
       zoom: 4.8,
-      pitch: 35,
+      pitch: 25,
     });
 
     mapRef.current = map;
@@ -208,7 +246,7 @@ export default function DisasterGISMap() {
         },
       });
 
-      // Add MapLibre GPU-Accelerated Heatmap Layer
+      // Add MapLibre GPU-Accelerated Heatmap Layer with high vibrancy
       map.addLayer({
         id: 'disaster-heatmap-layer',
         type: 'heatmap',
@@ -220,50 +258,41 @@ export default function DisasterGISMap() {
             'interpolate',
             ['linear'],
             ['zoom'],
-            0, 1,
-            9, 3
+            0, 1.8,
+            5, 3.5,
+            9, 5.0
           ],
           'heatmap-color': [
             'interpolate',
             ['linear'],
             ['heatmap-density'],
             0, 'rgba(0, 0, 0, 0)',
-            0.2, 'rgba(56, 189, 248, 0.4)',
-            0.4, 'rgba(34, 197, 94, 0.6)',
-            0.6, 'rgba(234, 179, 8, 0.8)',
-            0.8, 'rgba(249, 115, 22, 0.9)',
-            1.0, 'rgba(239, 68, 68, 0.98)'
+            0.1, 'rgba(14, 165, 233, 0.5)',   // Sky blue
+            0.3, 'rgba(34, 197, 94, 0.75)',   // Radiant green
+            0.55, 'rgba(234, 179, 8, 0.85)',  // Vivid amber
+            0.75, 'rgba(249, 115, 22, 0.95)', // Burning orange
+            1.0, 'rgba(239, 68, 68, 1.0)'     // Critical red
           ],
           'heatmap-radius': [
             'interpolate',
             ['linear'],
             ['zoom'],
-            0, 8,
-            4, 20,
-            8, 45,
-            12, 70
+            0, 25,
+            4, 45,
+            8, 80,
+            12, 130
           ],
-          'heatmap-opacity': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            4, 0.85,
-            9, 0.5,
-            12, 0.2
-          ],
+          'heatmap-opacity': 0.85,
         },
       });
 
-      // Add Live Weather Radar Layer
-      if (activeLayers.weatherRadar) {
-        await addRainViewerRadarLayer(map);
-      }
-
-      // Add Tactical Hazard Zone Polygon
-      const sampleBuffer = generateHazardBufferGeoJSON(85.8312, 19.8135, 45.0);
+      // Add Tactical Hazard Zone Buffer Source
       map.addSource('hazard-zone-buffer', {
         type: 'geojson',
-        data: sampleBuffer as any,
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
       });
 
       map.addLayer({
@@ -271,8 +300,8 @@ export default function DisasterGISMap() {
         type: 'fill',
         source: 'hazard-zone-buffer',
         paint: {
-          'fill-color': '#ff675e',
-          'fill-opacity': 0.15,
+          'fill-color': '#ef4444',
+          'fill-opacity': 0.18,
         },
       });
 
@@ -281,53 +310,73 @@ export default function DisasterGISMap() {
         type: 'line',
         source: 'hazard-zone-buffer',
         paint: {
-          'line-color': '#ff675e',
+          'line-color': '#ef4444',
           'line-width': 2,
-          'line-dasharray': [2, 2],
+          'line-dasharray': [3, 2],
         },
       });
+
+      // Add Live Weather Radar Layer if active
+      if (activeLayers.weatherRadar) {
+        await addRainViewerRadarLayer(map);
+      }
     });
 
     return () => {
       map.remove();
     };
-  }, []);
+  }, [selectedBasemap]);
 
-  // 3. Update Heatmap Data Source when Disasters Change
+  // 3. Update Heatmap & Hazard Zone Data Sources when Disasters Change
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
 
-    const source = map.getSource('disaster-heatmap-source') as maplibregl.GeoJSONSource;
-    if (!source) return;
+    // Update Heatmap Points
+    const heatSource = map.getSource('disaster-heatmap-source') as maplibregl.GeoJSONSource;
+    if (heatSource) {
+      const features = disasterNodes.map(d => {
+        let weight = 0.5;
+        if (d.severity === 'CRITICAL') weight = 1.0;
+        else if (d.severity === 'HIGH') weight = 0.8;
+        else if (d.severity === 'MODERATE') weight = 0.5;
+        else if (d.severity === 'LOW') weight = 0.25;
 
-    const features = disasterNodes.map(d => {
-      let weight = 0.4;
-      if (d.severity === 'CRITICAL') weight = 1.0;
-      else if (d.severity === 'HIGH') weight = 0.7;
-      else if (d.severity === 'MODERATE') weight = 0.4;
-      else if (d.severity === 'LOW') weight = 0.2;
+        return {
+          type: 'Feature' as const,
+          properties: {
+            id: d.id,
+            name: d.name,
+            severity: d.severity,
+            weight: weight,
+          },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: [d.lng, d.lat],
+          },
+        };
+      });
 
-      return {
-        type: 'Feature' as const,
-        properties: {
-          id: d.id,
-          name: d.name,
-          severity: d.severity,
-          weight: weight,
-        },
-        geometry: {
-          type: 'Point' as const,
-          coordinates: [d.lng, d.lat],
-        },
-      };
-    });
+      heatSource.setData({
+        type: 'FeatureCollection',
+        features,
+      });
+    }
 
-    source.setData({
-      type: 'FeatureCollection',
-      features,
-    });
-  }, [disasterNodes]);
+    // Update Hazard Zone Buffers (Polygons around each disaster)
+    const hazardSource = map.getSource('hazard-zone-buffer') as maplibregl.GeoJSONSource;
+    if (hazardSource) {
+      const bufferFeatures = disasterNodes.map(d => {
+        const radiusKm = d.subType.toLowerCase().includes('cyclone') ? 70 : d.subType.toLowerCase().includes('flood') ? 40 : 25;
+        return generateHazardBufferGeoJSON(d.lng, d.lat, radiusKm);
+      });
+
+      hazardSource.setData({
+        type: 'FeatureCollection',
+        features: bufferFeatures,
+      });
+    }
+  }, [disasterNodes, selectedBasemap]);
 
   // 4. Toggle Heatmap Layer Visibility
   useEffect(() => {
@@ -339,6 +388,18 @@ export default function DisasterGISMap() {
       activeLayers.severityHeatmap ? 'visible' : 'none'
     );
   }, [activeLayers.severityHeatmap]);
+
+  // 4b. Toggle Tactical Hazard Buffer Zones Visibility
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (map.getLayer('hazard-zone-fill')) {
+      map.setLayoutProperty('hazard-zone-fill', 'visibility', activeLayers.hazardZones ? 'visible' : 'none');
+    }
+    if (map.getLayer('hazard-zone-line')) {
+      map.setLayoutProperty('hazard-zone-line', 'visibility', activeLayers.hazardZones ? 'visible' : 'none');
+    }
+  }, [activeLayers.hazardZones]);
 
   // 5. Toggle Weather Radar Layer Visibility
   useEffect(() => {
@@ -614,6 +675,46 @@ export default function DisasterGISMap() {
         {/* Right: Quick Action Controls */}
         <div className="flex items-center space-x-1.5 bg-surface-low/95 backdrop-blur-xl p-1 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto text-tactical-text">
           
+          {/* Basemap Switcher Pill */}
+          <div className="hidden md:flex items-center bg-surface-high/60 p-0.5 rounded-xl border border-surface-highest">
+            <button
+              onClick={() => setSelectedBasemap('voyager')}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                selectedBasemap === 'voyager' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+              }`}
+              title="Real-World Detailed Streets & Terrain Map"
+            >
+              🗺️ Map
+            </button>
+            <button
+              onClick={() => setSelectedBasemap('satellite')}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                selectedBasemap === 'satellite' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+              }`}
+              title="Real High-Resolution Esri Satellite Imagery"
+            >
+              🛰️ Sat
+            </button>
+            <button
+              onClick={() => setSelectedBasemap('dark')}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                selectedBasemap === 'dark' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+              }`}
+              title="Dark Night Tactical Mode"
+            >
+              🌑 Dark
+            </button>
+            <button
+              onClick={() => setSelectedBasemap('topo')}
+              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                selectedBasemap === 'topo' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+              }`}
+              title="Topographic Elevation Map"
+            >
+              ⛰️ Topo
+            </button>
+          </div>
+
           {/* Heatmap Toggle */}
           <button
             onClick={() => setActiveLayers(prev => ({ ...prev, severityHeatmap: !prev.severityHeatmap }))}
@@ -632,7 +733,7 @@ export default function DisasterGISMap() {
             className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
               activeLayers.weatherRadar ? 'bg-primary/20 text-primary border border-primary/40 shadow-sm' : 'hover:bg-surface-high text-tactical-muted'
             }`}
-            title="Toggle Live RainViewer Radar"
+            title="Toggle Live RainViewer Doppler Radar"
           >
             <CloudRain className="w-3.5 h-3.5 text-primary" />
             <span className="hidden sm:inline text-[11px] font-bold">Radar</span>
@@ -675,6 +776,8 @@ export default function DisasterGISMap() {
       <MapLayerSelector 
         activeLayers={activeLayers} 
         setActiveLayers={setActiveLayers} 
+        selectedBasemap={selectedBasemap}
+        setSelectedBasemap={setSelectedBasemap}
         isOpen={isLayersOpen} 
         onClose={() => setIsLayersOpen(false)} 
       />
