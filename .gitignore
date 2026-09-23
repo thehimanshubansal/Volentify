@@ -8,5 +8,5 @@ __pycache__/
 # TypeScript build cache
 *.tsbuildinfo
 
-frontend/.env
-.env
+frontend/.env.local
+.env.local

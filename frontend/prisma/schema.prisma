@@ -1,0 +1,194 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  CITIZEN
+  VOLUNTEER
+  NGO_MEMBER
+  RESEARCHER
+  INCIDENT_ADMIN
+}
+
+enum Severity {
+  CRITICAL
+  HIGH
+  MODERATE
+  LOW
+}
+
+enum TaskStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum SourceType {
+  OFFICIAL
+  NEWS
+  SOCIAL
+  SENSOR
+  CITIZEN
+}
+
+model User {
+  id            String          @id @default(cuid())
+  name          String
+  email         String          @unique
+  phone         String?
+  passwordHash  String          @default("volentify_secure_hash")
+  role          Role            @default(CITIZEN)
+  stateDistrict String?
+  isVerified    Boolean         @default(false)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  volunteer     VolunteerProfile?
+  organization  Organization?   @relation(fields: [orgId], references: [id])
+  orgId         String?
+  tasksCreated  Task[]          @relation("CreatedTasks")
+  tasksAssigned Task[]          @relation("AssignedVolunteer")
+  evidencePosts Evidence[]
+  alertsSent    Alert[]         @relation("AlertSender")
+
+  @@index([role])
+  @@index([email])
+}
+
+model VolunteerProfile {
+  id              String       @id @default(cuid())
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills          String[]     // ["Paramedic", "Rescue & Search", "Boat Operator", "First Aid", "Food Logistics", "Debris Clearing"]
+  currentLat      Float
+  currentLng      Float
+  locationName    String       @default("Field Location")
+  availability    String       @default("AVAILABLE") // AVAILABLE, BUSY, OFFLINE
+  missionsDone    Int          @default(0)
+  totalHours      Float        @default(0.0)
+  equipment       String[]     @default([])
+  badgeLevel      String       @default("Tier-1 Field Responder")
+  responseRate    Float        @default(98.0)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([availability])
+}
+
+model Organization {
+  id             String      @id @default(cuid())
+  name           String      @unique
+  category       String      // "NDRF", "SDRF", "RED_CROSS", "LOCAL_NGO", "CIVIL_DEFENSE"
+  state          String
+  district       String
+  contactEmail   String
+  contactPhone   String
+  registrationNo String?
+  verified       Boolean     @default(true)
+  members        User[]
+  disasters      Disaster[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model Disaster {
+  id             String      @id @default(cuid())
+  code           String      @unique // e.g. "ALT-101", "DIS-2026-089"
+  title          String
+  category       String      // "Cyclone", "Flood", "Wildfire", "Earthquake", "Landslide", "Heatwave"
+  severity       Severity    @default(HIGH)
+  lat            Float
+  lng            Float
+  location       String      // e.g. "Puri Coast, Odisha"
+  state          String
+  radiusKm       Float       @default(25.0)
+  polygonGeoJson String?     // Serialized GeoJSON buffer/contour
+  status         String      @default("ACTIVE") // "ACTIVE", "MONITORING", "CONTAINED", "RESOLVED"
+  affectedPop    String?     // e.g. "1.4M"
+  summary        String
+  windSpeedKmh   Float?
+  rainfallMm     Float?
+  surgeMeters    Float?
+  orgId          String?
+  org            Organization? @relation(fields: [orgId], references: [id])
+  tasks          Task[]
+  evidence       Evidence[]
+  alerts         Alert[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([severity])
+  @@index([category])
+  @@index([state])
+}
+
+model Task {
+  id             String       @id @default(cuid())
+  code           String       @unique // e.g. "TSK-001"
+  title          String
+  description    String?
+  urgency        Severity     @default(HIGH)
+  requiredSkill  String       // "Rescue & Search", "Paramedic", "Food & Shelter Logistics", etc.
+  lat            Float
+  lng            Float
+  locationName   String       @default("Incident Site")
+  quantityNeeded Int          @default(1)
+  status         TaskStatus   @default(OPEN)
+  disasterId     String
+  disaster       Disaster     @relation(fields: [disasterId], references: [id], onDelete: Cascade)
+  createdById    String
+  createdBy      User         @relation("CreatedTasks", fields: [createdById], references: [id])
+  assignedToId   String?
+  assignedTo     User?        @relation("AssignedVolunteer", fields: [assignedToId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([urgency])
+  @@index([status])
+  @@index([requiredSkill])
+}
+
+model Evidence {
+  id          String      @id @default(cuid())
+  disasterId  String
+  disaster    Disaster    @relation(fields: [disasterId], references: [id], onDelete: Cascade)
+  authorId    String?
+  author      User?       @relation(fields: [authorId], references: [id])
+  source      String      // "IMD Coastal Radar", "CWC Telemetry", "NDRF Command", "X (Twitter)", "Citizen SOS"
+  sourceType  SourceType  @default(OFFICIAL)
+  claimText   String
+  relation    String      @default("SUPPORTING") // "SUPPORTING", "CONFLICTING", "DUPLICATE"
+  confidence  Float       @default(0.92)
+  language    String      @default("en") // "en", "hi", "or", "bn", "ta", "ml"
+  createdAt   DateTime    @default(now())
+
+  @@index([sourceType])
+  @@index([relation])
+}
+
+model Alert {
+  id          String      @id @default(cuid())
+  code        String      @unique // e.g. "ALT-BRDCST-001"
+  title       String
+  category    String      // "Cyclone", "Flood", "Wildfire", "Landslide", "Heatwave"
+  level       Severity    @default(CRITICAL)
+  location    String
+  state       String
+  description String
+  advisory    String
+  disasterId  String?
+  disaster    Disaster?   @relation(fields: [disasterId], references: [id])
+  senderId    String?
+  sender      User?       @relation("AlertSender", fields: [senderId], references: [id])
+  sentAt      DateTime    @default(now())
+
+  @@index([level])
+  @@index([state])
+}
