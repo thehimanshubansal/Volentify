@@ -8,8 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
-    "prisma:seed": "ts-node prisma/seed.ts"
+    "prisma:seed": "npx tsx prisma/seed.ts"
   },
+  "prisma": {
+    "seed": "npx tsx prisma/seed.ts"
+  },
+
   "dependencies": {
     "@prisma/client": "6.4.0",
     "clsx": "^2.1.1",

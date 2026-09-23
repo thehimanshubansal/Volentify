@@ -35,16 +35,6 @@ app = FastAPI(
     openapi_url="/api/openapi.json"
 )
 
-# Load sample 100+ data for instant offline/fallback resilience
-SAMPLE_DATA_PATH = os.path.join(current_dir, "data", "sample_100_data.json")
-SAMPLE_DATA: Dict[str, Any] = {"disasters": [], "volunteers": [], "tasks": [], "organizations": [], "evidence": [], "alerts": []}
-if os.path.exists(SAMPLE_DATA_PATH):
-    try:
-        with open(SAMPLE_DATA_PATH, "r", encoding="utf-8") as f:
-            SAMPLE_DATA = json.load(f)
-    except Exception as e:
-        print(f"Warning loading sample_100_data.json: {e}")
-
 class HazardNodeSchema(BaseModel):
     id: str
     name: str
@@ -96,8 +86,6 @@ def read_health():
         "system": "VOLENTIFY 2.0 DISASTER INTELLIGENCE PLATFORM",
         "version": "2.0.0",
         "engine": "LAYA MULTILINGUAL SYSTEM 1 DECISION ENGINE",
-        "orm": "PRISMA ORM & POSTGRESQL",
-        "sample_records_loaded": len(SAMPLE_DATA.get("disasters", [])),
         "database": db_status
     }
 
@@ -124,51 +112,45 @@ def get_bhuvan_bulletins():
     """
     return BhuvanGeospatialService.get_bhuvan_bulletins()
 
-# --- Disasters Endpoint with 100+ Sample Fallback ---
+
+# --- Disasters Endpoint (Live Supabase DB) ---
 @app.get("/api/disasters", response_model=List[HazardNodeSchema])
 def get_disasters():
-    if supabase:
-        try:
-            response = supabase.table("disasters").select("*").execute()
-            if response.data and len(response.data) > 0:
-                return response.data
-        except Exception as e:
-            print(f"Supabase fetch fallback: {e}")
-    return SAMPLE_DATA.get("disasters", [])
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Supabase database not connected. Check environment variables.")
+    try:
+        response = supabase.table("disasters").select("*").execute()
+        return response.data or []
+    except Exception as e:
+        print(f"Supabase disasters query error: {e}")
+        return []
 
-# --- Tasks Endpoint with 100+ Sample Fallback ---
+# --- Tasks Endpoint (Live Supabase DB) ---
 @app.get("/api/tasks")
 def get_tasks():
-    if supabase:
-        try:
-            res = supabase.table("tasks").select("*").execute()
-            if res.data and len(res.data) > 0:
-                return res.data
-        except Exception as e:
-            print(f"Supabase tasks fallback: {e}")
-    return SAMPLE_DATA.get("tasks", [])
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Supabase database not connected. Check environment variables.")
+    try:
+        res = supabase.table("tasks").select("*").execute()
+        return res.data or []
+    except Exception as e:
+        print(f"Supabase tasks query error: {e}")
+        return []
 
-# --- Volunteers Endpoint with 100+ Live Field Volunteers ---
+# --- Volunteers Endpoint (Live Supabase DB) ---
 @app.get("/api/volunteers")
 def get_volunteers(availability: Optional[str] = None):
-    vols = []
-    if supabase:
-        try:
-            query = supabase.table("volunteers").select("*")
-            if availability and availability != "ALL":
-                query = query.eq("availability", availability)
-            res = query.execute()
-            if res.data and len(res.data) > 0:
-                vols = res.data
-        except Exception as e:
-            print(f"Supabase volunteers fallback: {e}")
-    
-    if not vols:
-        vols = SAMPLE_DATA.get("volunteers", [])
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Supabase database not connected. Check environment variables.")
+    try:
+        query = supabase.table("volunteers").select("*")
         if availability and availability != "ALL":
-            vols = [v for v in vols if v.get("availability") == availability]
-            
-    return vols
+            query = query.eq("availability", availability)
+        res = query.execute()
+        return res.data or []
+    except Exception as e:
+        print(f"Supabase volunteers query error: {e}")
+        return []
 
 class VolunteerStatusUpdate(BaseModel):
     volunteer_id: str
@@ -176,28 +158,38 @@ class VolunteerStatusUpdate(BaseModel):
 
 @app.post("/api/volunteer/availability")
 def update_volunteer_status(req: VolunteerStatusUpdate):
-    if supabase:
-        try:
-            supabase.table("volunteers").update({"availability": req.availability}).eq("id", req.volunteer_id).execute()
-        except Exception as e:
-            print(f"Supabase update fallback: {e}")
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Supabase database not connected.")
+    try:
+        res = supabase.table("volunteers").update({"availability": req.availability}).eq("id", req.volunteer_id).execute()
+        return {"status": "success", "volunteer": res.data[0] if res.data else {"id": req.volunteer_id, "availability": req.availability}}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    for v in SAMPLE_DATA.get("volunteers", []):
-        if v.get("id") == req.volunteer_id:
-            v["availability"] = req.availability
-            return {"status": "success", "volunteer": v}
-    return {"status": "success", "volunteer_id": req.volunteer_id, "availability": req.availability}
-
-
-# --- Alerts Endpoint ---
+# --- Alerts Endpoint (Live Supabase DB) ---
 @app.get("/api/alerts")
 def get_alerts():
-    return SAMPLE_DATA.get("alerts", [])
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Supabase database not connected.")
+    try:
+        res = supabase.table("alerts").select("*").execute()
+        return res.data or []
+    except Exception as e:
+        print(f"Supabase alerts query error: {e}")
+        return []
 
-# --- Organizations Endpoint ---
+# --- Organizations Endpoint (Live Supabase DB) ---
 @app.get("/api/organizations")
 def get_organizations():
-    return SAMPLE_DATA.get("organizations", [])
+    if not supabase:
+        raise HTTPException(status_code=503, detail="Supabase database not connected.")
+    try:
+        res = supabase.table("organizations").select("*").execute()
+        return res.data or []
+    except Exception as e:
+        print(f"Supabase organizations query error: {e}")
+        return []
+
 
 @app.post("/api/predict", response_model=PredictionResponseSchema)
 def predict_hazard(data: PredictionRequestSchema):
@@ -282,21 +274,26 @@ def create_volunteer_profile(profile: dict = Body(...)):
 # --- Feature 1: Resource Matching ---
 @app.post("/api/match", response_model=List[RankedMatchSchema])
 def match_task(task: TaskSchema, volunteers: Optional[List[VolunteerSchema]] = Body(None)):
-    if not volunteers:
-        # Fallback to sample volunteers
-        sample_vols = []
-        for v in SAMPLE_DATA.get("volunteers", [])[:10]:
-            sample_vols.append(VolunteerSchema(
-                id=v["id"],
-                name=v["name"],
-                skills=v["skills"],
-                lat=v["lat"],
-                lng=v["lng"],
-                availability=v.get("availability", "AVAILABLE"),
-                verified=v.get("verified", True)
-            ))
-        volunteers = sample_vols
-    return ResourceMatcher.match_task(task, volunteers)
+    if not volunteers and supabase:
+        try:
+            res = supabase.table("volunteers").select("*").eq("availability", "AVAILABLE").execute()
+            if res.data:
+                volunteers = [
+                    VolunteerSchema(
+                        id=v["id"],
+                        name=v["name"],
+                        skills=v.get("skills", []),
+                        lat=float(v.get("currentLat") or v.get("lat") or 0.0),
+                        lng=float(v.get("currentLng") or v.get("lng") or 0.0),
+                        availability=v.get("availability", "AVAILABLE"),
+                        verified=v.get("verified", True)
+                    )
+                    for v in res.data
+                ]
+        except Exception as e:
+            print(f"Supabase volunteer fetch in match_task error: {e}")
+    return ResourceMatcher.match_task(task, volunteers or [])
+
 
 # --- Feature 4: Event Deduplication ---
 @app.post("/api/events/ingest", response_model=List[DeduplicatedEventSchema])

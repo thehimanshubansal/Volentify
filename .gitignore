@@ -9,4 +9,6 @@ __pycache__/
 *.tsbuildinfo
 
 frontend/.env.local
+frontend/.env
 .env.local
+.env

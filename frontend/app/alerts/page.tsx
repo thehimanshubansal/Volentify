@@ -31,94 +31,41 @@ interface AlertItem {
   };
 }
 
-const MOCK_ALERTS: AlertItem[] = [
-  {
-    id: 'ALT-101',
-    title: 'Category 3 Cyclone Remal Landfall Watch',
-    category: 'Cyclone',
-    level: 'CRITICAL',
-    location: 'Puri, Paradip & Coastal Districts',
-    state: 'Odisha',
-    time: '10 minutes ago',
-    description: 'Severe cyclonic storm approaching at 145 km/h. High tidal storm surge expected.',
-    advisory: 'Evacuate to designated concrete shelters immediately. Stock 72h dry food and water.',
-    mlPrediction: {
-      confidenceScore: '94%',
-      predictedImpact: 'High structural damage & power grid failure probability.',
-      etaOrDuration: 'ETA: 14 hours to landfall',
-    }
-  },
-  {
-    id: 'ALT-102',
-    title: 'Brahmaputra River Inundation Alert',
-    category: 'Flood',
-    level: 'CRITICAL',
-    location: 'Guwahati, Kamrup & Barpeta',
-    state: 'Assam',
-    time: '25 minutes ago',
-    description: 'Water level surpassed danger mark by 1.8 meters. 12 villages submerged.',
-    advisory: 'Move to elevated ground. SDRF motorboat teams deployed for evacuation.',
-    mlPrediction: {
-      confidenceScore: '88%',
-      predictedImpact: 'Continued inundation expected across 50 sq. km area.',
-      etaOrDuration: 'Duration: Peak flooding for next 48-72h',
-    }
-  },
-  {
-    id: 'ALT-103',
-    title: 'Uttarakhand High-Altitude Forest Fires',
-    category: 'Wildfire',
-    level: 'HIGH',
-    location: 'Chamoli & Almora Forest Divisions',
-    state: 'Uttarakhand',
-    time: '1 hour ago',
-    description: 'Dry winds accelerating fire spread across 45 hectares of pine forest.',
-    advisory: 'Air Force helicopters conducting water drop operations. Avoid mountain passes.',
-    mlPrediction: {
-      confidenceScore: '81%',
-      predictedImpact: 'Rapid spread towards northeast settlements.',
-      etaOrDuration: 'ETA: Fireline reaching outskirts in 6 hrs',
-    }
-  },
-  {
-    id: 'ALT-104',
-    title: 'Wayanad Slope Instability Warning',
-    category: 'Landslide',
-    level: 'CRITICAL',
-    location: 'Meppadi & Chooralmala',
-    state: 'Kerala',
-    time: '2 hours ago',
-    description: 'Continuous rainfall (280mm) triggered high landslide risk along tea estate slopes.',
-    advisory: 'Traffic suspended along ghat roads. Rescue teams active on site.',
-    mlPrediction: {
-      confidenceScore: '92%',
-      predictedImpact: 'High risk of secondary slope failures.',
-      etaOrDuration: 'Duration: Critical risk for next 24 hours',
-    }
-  },
-  {
-    id: 'ALT-105',
-    title: 'Extreme Heatwave Advisory',
-    category: 'Heatwave',
-    level: 'HIGH',
-    location: 'Delhi NCR & Haryana',
-    state: 'Delhi',
-    time: '3 hours ago',
-    description: 'Temperatures peaking at 47°C. IMD Red Alert issued.',
-    advisory: 'Avoid outdoor activities between 11 AM - 4 PM. Stay hydrated.',
-    mlPrediction: {
-      confidenceScore: '97%',
-      predictedImpact: 'Severe heat stress for vulnerable populations.',
-      etaOrDuration: 'Duration: Elevated temps for 4-5 days',
-    }
-  },
-];
-
 export default function AlertsPage() {
+  const [alertsList, setAlertsList] = useState<AlertItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [broadcastMessage, setBroadcastMessage] = useState('');
 
-  const filteredAlerts = MOCK_ALERTS.filter(
+  useEffect(() => {
+    fetch('/api/alerts')
+      .then(res => res.json())
+      .then((data: any[]) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: AlertItem[] = data.map((a: any) => ({
+            id: a.id,
+            title: a.title,
+            category: a.category || 'Cyclone',
+            level: a.level || 'HIGH',
+            location: a.location || 'India',
+            state: a.state || '',
+            time: a.time || 'Recently',
+            description: a.description || 'Emergency alert broadcast.',
+            advisory: a.advisory || 'Follow local authorities evacuation orders.',
+            mlPrediction: {
+              confidenceScore: a.confidenceScore || '95%',
+              predictedImpact: a.predictedImpact || 'High risk of damage and power grid disruption.',
+              etaOrDuration: a.etaOrDuration || 'Active Warning',
+            }
+          }));
+          setAlertsList(mapped);
+        }
+      })
+      .catch(err => console.error('Error fetching alerts:', err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filteredAlerts = alertsList.filter(
     (a) => selectedCategory === 'ALL' || a.category.toUpperCase() === selectedCategory
   );
 

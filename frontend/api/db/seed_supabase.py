@@ -183,13 +183,42 @@ def generate_sample_dataset():
         "alerts": alerts
     }
 
-    # Save to json file for instant frontend/FastAPI loading
-    out_path = os.path.join(os.path.dirname(__file__), "..", "data", "sample_100_data.json")
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(data, f, indent=2)
-
-    print(f"Generated 100+ sample records for all 6 tables! Saved to {out_path}")
     return data
 
+
+def push_to_supabase(data=None):
+    if data is None:
+        data = generate_sample_dataset()
+
+    try:
+        from api.db.database import supabase
+    except Exception:
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+        from api.db.database import supabase
+
+    if not supabase:
+        print("ERROR: Cannot connect to Supabase. Check SUPABASE_URL and SUPABASE_KEY in .env.local")
+        return False
+
+    print("Pushing records directly to Supabase tables...")
+    for table_name in ["disasters", "volunteers", "tasks", "organizations", "evidence", "alerts"]:
+        records = data.get(table_name, [])
+        if not records:
+            continue
+        try:
+            # Batch upsert in chunks of 50
+            chunk_size = 50
+            for idx in range(0, len(records), chunk_size):
+                chunk = records[idx:idx + chunk_size]
+                supabase.table(table_name).upsert(chunk).execute()
+            print(f"Successfully synced {len(records)} records to Supabase table: '{table_name}'")
+        except Exception as e:
+            print(f"Notice syncing table '{table_name}' (table might need schema migration first): {e}")
+
+    print("Supabase database sync complete!")
+    return True
+
 if __name__ == "__main__":
-    generate_sample_dataset()
+    dataset = generate_sample_dataset()
+    push_to_supabase(dataset)
+
