@@ -1,19 +1,16 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
-
 import Link from 'next/link';
 import { 
-  ShieldAlert, 
   Radio, 
   Send, 
-  Filter, 
   MapPin, 
   Clock, 
   ArrowRight,
-  BellRing,
-  PhoneCall
+  ShieldAlert,
+  Sparkles,
+  ArrowUpRight
 } from 'lucide-react';
 
 interface AlertItem {
@@ -79,30 +76,35 @@ export default function AlertsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-6 py-16 space-y-12">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-surface-highest/60 pb-6">
-        <div>
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emergency/15 border border-emergency/40 text-emergency text-xs font-telemetry font-bold">
+      {/* Editorial Page Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-8 border-b border-white/[0.08]">
+        <div className="space-y-4 max-w-3xl">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emergency/15 border border-emergency/40 font-mono text-xs text-emergency backdrop-blur-md">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
             <span>REAL-TIME EMERGENCY ALERT NETWORK</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-tactical-text mt-2">
-            Active Disaster Alerts (14 Live)
+
+          <h1 className="heading-editorial text-4xl sm:text-6xl text-white leading-tight">
+            National Crisis Alerts
           </h1>
+
+          <p className="text-base text-slate-400 font-light leading-relaxed">
+            Geofenced early warnings, automated cell broadcasts, and ML situation predictions across affected disaster corridors.
+          </p>
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center space-x-2 overflow-x-auto font-telemetry text-xs">
+        <div className="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0">
           {['ALL', 'CYCLONE', 'FLOOD', 'WILDFIRE', 'LANDSLIDE'].map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1.5 rounded transition-all ${
+              className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
                 selectedCategory === cat
-                  ? 'bg-primary text-surface-lowest font-bold'
-                  : 'bg-surface-high hover:bg-surface-highest text-tactical-text'
+                  ? 'bg-primary text-slate-950 font-semibold shadow-md'
+                  : 'bg-white/[0.04] text-slate-400 hover:text-white border border-white/[0.08]'
               }`}
             >
               {cat}
@@ -112,84 +114,87 @@ export default function AlertsPage() {
       </div>
 
       {/* Grid: Alert List + Emergency Broadcast Panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Alerts Column */}
-        <div className="lg:col-span-8 space-y-4">
+        <div className="lg:col-span-8 space-y-6">
           {filteredAlerts.map((alert) => (
             <div
               key={alert.id}
-              className={`p-6 rounded-2xl glass-panel space-y-3 transition-all hover:border-primary/60 border ${
-                alert.level === 'CRITICAL' ? 'border-emergency/50' : 'border-surface-highest'
+              className={`p-7 rounded-3xl bg-surface-card border space-y-4 transition-all duration-300 hover:border-white/[0.22] hover:shadow-2xl ${
+                alert.level === 'CRITICAL' ? 'border-emergency/50' : 'border-white/[0.08]'
               }`}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2.5">
                   <span
-                    className={`px-2.5 py-0.5 rounded font-telemetry text-[10px] font-bold ${
+                    className={`px-3 py-1 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider ${
                       alert.level === 'CRITICAL'
                         ? 'bg-emergency text-white animate-pulse'
-                        : 'bg-primary text-surface-lowest'
+                        : 'bg-primary text-slate-950'
                     }`}
                   >
                     {alert.level}
                   </span>
-                  <span className="text-xs font-telemetry text-tactical-muted">
-                    {alert.id} | {alert.category}
+                  <span className="font-mono text-xs text-slate-400">
+                    {alert.id} • {alert.category}
                   </span>
                 </div>
-                <div className="flex items-center space-x-1 text-xs font-telemetry text-tactical-muted">
+                <div className="flex items-center space-x-1.5 font-mono text-xs text-slate-500">
                   <Clock className="w-3.5 h-3.5 text-primary" />
                   <span>{alert.time}</span>
                 </div>
               </div>
 
-              <h3 className="text-lg font-bold text-tactical-text">
+              <h3 className="font-serif text-2xl text-white font-normal leading-snug">
                 {alert.title}
               </h3>
 
-              <div className="flex items-center space-x-1.5 text-xs text-primary font-telemetry">
-                <MapPin className="w-3.5 h-3.5" />
+              <div className="flex items-center space-x-1.5 text-xs text-primary font-sans">
+                <MapPin className="w-3.5 h-3.5 shrink-0" />
                 <span>{alert.location}, {alert.state}</span>
               </div>
 
-              <p className="text-xs text-tactical-muted leading-relaxed">
+              <p className="text-sm text-slate-400 font-light leading-relaxed">
                 {alert.description}
               </p>
 
-              <div className="p-3 rounded-lg bg-surface-high/60 border border-surface-highest text-xs text-tactical-text space-y-1">
-                <span className="text-[10px] font-telemetry font-bold text-emergency uppercase block">PUBLIC ADVISORY:</span>
-                <p className="italic">{alert.advisory}</p>
+              {/* Advisory Box */}
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-xs text-slate-300 space-y-1">
+                <span className="font-mono text-[10px] font-bold text-emergency uppercase tracking-wider block">
+                  PUBLIC ADVISORY:
+                </span>
+                <p className="italic font-light text-slate-400">{alert.advisory}</p>
               </div>
 
               {/* ML Prediction Telemetry */}
-              <div className="p-3 rounded-lg bg-surface-container border border-surface-highest/60 font-telemetry text-xs space-y-2">
-                <div className="flex items-center space-x-2 text-primary border-b border-surface-highest/60 pb-2 mb-2">
-                  <Radio className="w-3.5 h-3.5" />
-                  <span className="font-bold uppercase tracking-wide">AI SITUATION PREDICTION</span>
+              <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] font-mono text-xs space-y-3">
+                <div className="flex items-center space-x-2 text-primary border-b border-white/[0.06] pb-2">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="font-bold uppercase tracking-wider text-[11px]">AI SITUATION PREDICTION</span>
                 </div>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-3 text-xs">
                   <div>
-                    <span className="text-[9px] text-tactical-muted uppercase font-bold block">CONFIDENCE</span>
+                    <span className="text-[9px] text-slate-500 uppercase tracking-wider block">CONFIDENCE</span>
                     <span className="text-emerald-400 font-bold">{alert.mlPrediction.confidenceScore}</span>
                   </div>
                   <div>
-                    <span className="text-[9px] text-tactical-muted uppercase font-bold block">TIMELINE</span>
-                    <span className="text-tactical-text font-bold">{alert.mlPrediction.etaOrDuration}</span>
+                    <span className="text-[9px] text-slate-500 uppercase tracking-wider block">TIMELINE</span>
+                    <span className="text-slate-200 font-bold">{alert.mlPrediction.etaOrDuration}</span>
                   </div>
                 </div>
                 <div>
-                  <span className="text-[9px] text-tactical-muted uppercase font-bold block">PREDICTED IMPACT</span>
-                  <span className="text-tactical-text">{alert.mlPrediction.predictedImpact}</span>
+                  <span className="text-[9px] text-slate-500 uppercase tracking-wider block">PREDICTED IMPACT</span>
+                  <span className="text-slate-300 font-sans text-xs">{alert.mlPrediction.predictedImpact}</span>
                 </div>
               </div>
 
               <div className="pt-2 flex justify-end">
                 <Link
                   href={`/disasters/${alert.id}`}
-                  className="inline-flex items-center space-x-1 text-xs font-telemetry font-bold text-primary hover:underline"
+                  className="inline-flex items-center space-x-1.5 text-xs font-medium text-primary hover:text-primary-hover transition-colors"
                 >
-                  <span>VIEW FULL DISASTER INTEL</span>
+                  <span>View Full Tactical Intel</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
               </div>
@@ -199,19 +204,19 @@ export default function AlertsPage() {
 
         {/* Emergency Broadcast Form Sidebar */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-            <div className="flex items-center space-x-2 text-primary border-b border-surface-highest pb-3">
-              <Radio className="w-5 h-5 animate-pulse" />
-              <h3 className="text-sm font-bold uppercase">EMERGENCY BROADCAST TRIGGER</h3>
+          <div className="p-7 rounded-3xl bg-surface-card border border-white/[0.08] shadow-2xl space-y-5 backdrop-blur-xl">
+            <div className="flex items-center space-x-2.5 text-primary border-b border-white/[0.08] pb-3">
+              <Radio className="w-5 h-5 animate-pulse text-emergency" />
+              <h3 className="font-serif text-xl text-white font-normal">Emergency Broadcast</h3>
             </div>
 
-            <p className="text-xs text-tactical-muted">
-              Authorized personnel can issue real-time geofenced notifications to Volentify app users, SMS gateways, and WhatsApp API.
+            <p className="text-xs text-slate-400 font-light leading-relaxed">
+              Authorized personnel can issue real-time geofenced notifications to Volentify app users, SMS gateways, and WhatsApp emergency network.
             </p>
 
-            <form onSubmit={handleBroadcast} className="space-y-3">
+            <form onSubmit={handleBroadcast} className="space-y-4">
               <div>
-                <label className="text-[10px] text-tactical-muted uppercase font-bold block mb-1">
+                <label className="font-mono text-[10px] text-slate-400 uppercase tracking-wider block mb-1.5">
                   BROADCAST MESSAGE TEXT
                 </label>
                 <textarea
@@ -219,16 +224,16 @@ export default function AlertsPage() {
                   value={broadcastMessage}
                   onChange={(e) => setBroadcastMessage(e.target.value)}
                   placeholder="Enter official evacuation order or emergency advisory..."
-                  className="w-full p-3 rounded-lg bg-surface-lowest text-xs text-tactical-text border border-surface-highest focus:border-primary focus:outline-none"
+                  className="w-full p-3.5 rounded-2xl bg-white/[0.03] text-xs text-white border border-white/[0.08] focus:border-primary focus:outline-none placeholder-slate-500 font-sans"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded bg-emergency text-white font-bold text-xs flex items-center justify-center space-x-2 hover:bg-emergency-dark transition-colors shadow-emergency"
+                className="w-full py-3.5 rounded-full bg-emergency hover:brightness-110 text-white font-semibold text-xs flex items-center justify-center space-x-2 transition-all shadow-lg active:scale-95"
               >
-                <Send className="w-4 h-4" />
-                <span>DISPATCH EMERGENCY BROADCAST</span>
+                <Send className="w-3.5 h-3.5" />
+                <span>Dispatch Emergency Broadcast</span>
               </button>
             </form>
           </div>

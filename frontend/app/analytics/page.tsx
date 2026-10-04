@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { 
   BarChart, 
   Bar, 
@@ -17,7 +18,7 @@ import {
   Area,
   CartesianGrid
 } from 'recharts';
-import { LineChart as LineIcon, Activity, Calendar, Download, TrendingUp, Users, ShieldAlert, HeartHandshake } from 'lucide-react';
+import { LineChart as LineIcon, Activity, Calendar, Download, TrendingUp, Users, ShieldAlert, HeartHandshake, Map } from 'lucide-react';
 
 const DISASTER_YEARLY_DATA = [
   { year: '2020', Cyclones: 4, Floods: 12, Wildfires: 8, Others: 5 },
@@ -56,45 +57,67 @@ const CATEGORY_PIE_DATA = [
 
 export default function AnalyticsPage() {
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-6 py-16 space-y-12">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-surface-highest/60 pb-6">
-        <div>
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-secondary/30 border border-secondary-bright/40 text-secondary-bright text-xs font-telemetry font-bold">
+      {/* Editorial Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-8 border-b border-white/[0.08]">
+        <div className="space-y-4 max-w-3xl">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] font-mono text-xs text-primary backdrop-blur-md">
             <LineIcon className="w-3.5 h-3.5" />
             <span>HISTORICAL DISASTER & RESPONSE ANALYTICS</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-tactical-text mt-2">
+          <h1 className="heading-editorial text-4xl sm:text-6xl text-white leading-tight">
             National Analytics Dashboard
           </h1>
+          <p className="text-base text-slate-400 font-light leading-relaxed">
+            Multi-year historical crisis indicators, dispatch response velocity acceleration, and population impact assessments across India.
+          </p>
         </div>
 
-        <button
-          onClick={() => alert('Exporting CSV analytics data...')}
-          className="px-4 py-2 rounded bg-surface-high hover:bg-surface-highest border border-surface-highest text-tactical-text text-xs font-bold font-telemetry flex items-center space-x-2"
-        >
-          <Download className="w-4 h-4 text-primary" />
-          <span>EXPORT DATA CSV</span>
-        </button>
+        <div className="flex items-center space-x-3 shrink-0">
+          <button
+            onClick={() => alert('Exporting CSV analytics data...')}
+            className="px-6 py-3.5 rounded-full bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors backdrop-blur-md border border-white/[0.08] flex items-center space-x-2"
+          >
+            <Download className="w-4 h-4 text-primary" />
+            <span>Export CSV Dataset</span>
+          </button>
+        </div>
       </div>
 
       {/* Top Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-telemetry">
-        <div className="p-6 rounded-2xl glass-panel flex flex-col justify-between border-t-2 border-t-primary">
-          <div className="text-tactical-muted text-xs font-bold mb-4 flex items-center gap-2"><Users className="w-4 h-4"/>TOTAL RESCUED (2020-2025)</div>
-          <div className="text-3xl font-extrabold text-white">9.3M</div>
-          <div className="text-xs text-emerald-400 mt-2 flex items-center gap-1"><TrendingUp className="w-3 h-3"/> +12% YoY Average</div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] space-y-3 shadow-xl">
+          <div className="font-mono text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <Users className="w-4 h-4 text-primary"/>
+            <span>TOTAL CITIZENS RESCUED</span>
+          </div>
+          <div className="font-serif text-5xl text-white">9.3M</div>
+          <div className="text-xs text-emerald-400 flex items-center gap-1 font-mono">
+            <TrendingUp className="w-3.5 h-3.5"/> +12% Efficiency YoY Average
+          </div>
         </div>
-        <div className="p-6 rounded-2xl glass-panel flex flex-col justify-between border-t-2 border-t-[#3b82f6]">
-          <div className="text-tactical-muted text-xs font-bold mb-4 flex items-center gap-2"><ShieldAlert className="w-4 h-4"/>CRITICAL INCIDENTS MANAGED</div>
-          <div className="text-3xl font-extrabold text-white">4,812</div>
-          <div className="text-xs text-blue-400 mt-2 flex items-center gap-1"><Activity className="w-3 h-3"/> 28 Active Now</div>
+
+        <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] space-y-3 shadow-xl">
+          <div className="font-mono text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <ShieldAlert className="w-4 h-4 text-blue-400"/>
+            <span>CRITICAL INCIDENTS MANAGED</span>
+          </div>
+          <div className="font-serif text-5xl text-white">4,812</div>
+          <div className="text-xs text-blue-400 flex items-center gap-1 font-mono">
+            <Activity className="w-3.5 h-3.5"/> 28 Active Response Corridors
+          </div>
         </div>
-        <div className="p-6 rounded-2xl glass-panel flex flex-col justify-between border-t-2 border-t-[#a855f7]">
-          <div className="text-tactical-muted text-xs font-bold mb-4 flex items-center gap-2"><HeartHandshake className="w-4 h-4"/>VOLUNTEER HOURS LOGGED</div>
-          <div className="text-3xl font-extrabold text-white">1.2M+</div>
-          <div className="text-xs text-purple-400 mt-2 flex items-center gap-1"><Calendar className="w-3 h-3"/> Across 720 Districts</div>
+
+        <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] space-y-3 shadow-xl">
+          <div className="font-mono text-[10px] text-slate-400 uppercase tracking-widest flex items-center gap-2">
+            <HeartHandshake className="w-4 h-4 text-purple-400"/>
+            <span>VOLUNTEER HOURS LOGGED</span>
+          </div>
+          <div className="font-serif text-5xl text-white">1.2M+</div>
+          <div className="text-xs text-purple-400 flex items-center gap-1 font-mono">
+            <Calendar className="w-3.5 h-3.5"/> Across 720 Indian Districts
+          </div>
         </div>
       </div>
 
@@ -102,22 +125,22 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Disaster Frequency Bar Chart */}
-        <div className="lg:col-span-8 p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-tactical-text">ANNUAL DISASTER INCIDENCES IN INDIA (2020 - 2025)</h3>
-            <span className="text-[10px] text-tactical-muted">SOURCE: NDMA REPORTS</span>
+        <div className="lg:col-span-8 p-8 rounded-3xl bg-surface-card border border-white/[0.08] space-y-6 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-4">
+            <h3 className="font-serif text-2xl text-white">Annual Disaster Incidences in India (2020 - 2025)</h3>
+            <span className="font-mono text-[10px] text-slate-500">SOURCE: NDMA ANNUAL REPORTS</span>
           </div>
 
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={DISASTER_YEARLY_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a363d" vertical={false} />
-                <XAxis dataKey="year" stroke="#8b9ea8" fontSize={11} />
-                <YAxis stroke="#8b9ea8" fontSize={11} />
-                <Tooltip contentStyle={{ backgroundColor: '#111d23', borderColor: '#2a363d', fontSize: '12px' }} />
-                <Bar dataKey="Floods" fill="#3b82f6" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="Cyclones" fill="#ff6b00" radius={[2, 2, 0, 0]} stackId="a" />
-                <Bar dataKey="Wildfires" fill="#ff675e" radius={[2, 2, 0, 0]} stackId="a" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+                <XAxis dataKey="year" stroke="#94a3b8" fontSize={11} />
+                <YAxis stroke="#94a3b8" fontSize={11} />
+                <Tooltip contentStyle={{ backgroundColor: '#14171d', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }} />
+                <Bar dataKey="Floods" fill="#3b82f6" radius={[4, 4, 0, 0]} stackId="a" />
+                <Bar dataKey="Cyclones" fill="#ff6b00" radius={[4, 4, 0, 0]} stackId="a" />
+                <Bar dataKey="Wildfires" fill="#ff675e" radius={[4, 4, 0, 0]} stackId="a" />
                 <Bar dataKey="Others" fill="#10b981" radius={[4, 4, 0, 0]} stackId="a" />
               </BarChart>
             </ResponsiveContainer>
@@ -125,27 +148,27 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Category Breakdown Pie Chart */}
-        <div className="lg:col-span-4 p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-          <h3 className="text-sm font-bold text-tactical-text">DISASTER DISTRIBUTION BY TYPE</h3>
+        <div className="lg:col-span-4 p-8 rounded-3xl bg-surface-card border border-white/[0.08] space-y-6 shadow-2xl">
+          <h3 className="font-serif text-2xl text-white">Hazard Distribution</h3>
 
-          <div className="h-60 w-full">
+          <div className="h-56 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={CATEGORY_PIE_DATA} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                <Pie data={CATEGORY_PIE_DATA} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} label>
                   {CATEGORY_PIE_DATA.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#111d23', borderColor: '#2a363d', fontSize: '12px' }} />
+                <Tooltip contentStyle={{ backgroundColor: '#14171d', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }} />
               </PieChart>
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
             {CATEGORY_PIE_DATA.map((item) => (
               <div key={item.name} className="flex items-center space-x-2">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></span>
-                <span className="text-tactical-text">{item.name}: {item.value}%</span>
+                <span className="text-slate-300">{item.name}: {item.value}%</span>
               </div>
             ))}
           </div>
@@ -155,20 +178,21 @@ export default function AnalyticsPage() {
 
       {/* Grid: Additional Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
         {/* Population Impact Area Chart */}
-        <div className="p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-tactical-text">AFFECTED VS. RESCUED POPULATION</h3>
-            <span className="text-[10px] text-tactical-muted">Y-AXIS IN MILLIONS</span>
+        <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] space-y-4 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+            <h3 className="font-serif text-2xl text-white">Affected vs. Rescued Citizens</h3>
+            <span className="font-mono text-[10px] text-slate-500">IN MILLIONS</span>
           </div>
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={POPULATION_IMPACT_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a363d" vertical={false} />
-                <XAxis dataKey="year" stroke="#8b9ea8" fontSize={11} />
-                <YAxis stroke="#8b9ea8" fontSize={11} tickFormatter={(val) => `${(val/1000000).toFixed(1)}M`} />
-                <Tooltip contentStyle={{ backgroundColor: '#111d23', borderColor: '#2a363d', fontSize: '12px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+                <XAxis dataKey="year" stroke="#94a3b8" fontSize={11} />
+                <YAxis stroke="#94a3b8" fontSize={11} tickFormatter={(val) => `${(val/1000000).toFixed(1)}M`} />
+                <Tooltip contentStyle={{ backgroundColor: '#14171d', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }} />
                 <Area type="monotone" dataKey="Affected" stroke="#ef4444" fill="#ef4444" fillOpacity={0.2} />
                 <Area type="monotone" dataKey="Rescued" stroke="#10b981" fill="#10b981" fillOpacity={0.3} />
               </AreaChart>
@@ -177,10 +201,10 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Response Speed Line Chart */}
-        <div className="p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-tactical-text">AVERAGE DISPATCH RESPONSE TIME (MINUTES)</h3>
-            <span className="text-xs text-emerald-400 font-bold flex items-center space-x-1">
+        <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] space-y-4 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+            <h3 className="font-serif text-2xl text-white">Average Dispatch Speed</h3>
+            <span className="font-mono text-xs text-emerald-400 font-bold flex items-center space-x-1">
               <TrendingUp className="w-3.5 h-3.5" />
               <span>51% FASTER</span>
             </span>
@@ -189,15 +213,16 @@ export default function AnalyticsPage() {
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={RESPONSE_TIME_DATA}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#2a363d" vertical={false} />
-                <XAxis dataKey="month" stroke="#8b9ea8" fontSize={11} />
-                <YAxis stroke="#8b9ea8" fontSize={11} />
-                <Tooltip contentStyle={{ backgroundColor: '#111d23', borderColor: '#2a363d', fontSize: '12px' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+                <XAxis dataKey="month" stroke="#94a3b8" fontSize={11} />
+                <YAxis stroke="#94a3b8" fontSize={11} />
+                <Tooltip contentStyle={{ backgroundColor: '#14171d', borderColor: '#334155', borderRadius: '12px', fontSize: '12px' }} />
                 <Line type="monotone" dataKey="avgMinutes" stroke="#ff6b00" strokeWidth={3} dot={{ fill: '#ff6b00', r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
+
       </div>
 
     </div>

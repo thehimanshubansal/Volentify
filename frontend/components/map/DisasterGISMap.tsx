@@ -15,36 +15,28 @@ import {
   RefreshCw,
   Sparkles,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Eye,
+  Compass,
+  Hospital,
+  Home,
+  ShieldAlert,
+  Boxes
 } from 'lucide-react';
 import MapLayerSelector from './MapLayerSelector';
 import MapTimelineSlider from './MapTimelineSlider';
 import MapPopupPanel from './MapPopupPanel';
+import GodsEyeHud from './GodsEyeHud';
 import { addRainViewerRadarLayer, generateHazardBufferGeoJSON } from './weatherLayers';
-
-export interface MapFeatureNode {
-  id: string;
-  name: string;
-  category: 'hazard' | 'hospital' | 'shelter' | 'volunteer' | 'agency';
-  subType: string;
-  severity?: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'LOW' | 'INFO';
-  lat: number;
-  lng: number;
-  details: string;
-  contact?: string;
-  status: string;
-  updatedAt: string;
-  location?: string;
-  state?: string;
-  skills?: string[];
-  equipment?: string[];
-  missionsDone?: number;
-  totalHours?: number;
-  responseRate?: number;
-  windSpeed?: number;
-  rainfallMm?: number;
-  affectedPop?: string;
-}
+import { 
+  MapFeatureNode, 
+  TacticalSector, 
+  TACTICAL_SECTORS, 
+  MOCK_DISASTERS, 
+  MOCK_VOLUNTEERS, 
+  MOCK_HOSPITALS, 
+  MOCK_SHELTERS 
+} from './mockGisData';
 
 export default function DisasterGISMap() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -52,21 +44,34 @@ export default function DisasterGISMap() {
   const markersRef = useRef<maplibregl.Marker[]>([]);
 
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [disasterNodes, setDisasterNodes] = useState<MapFeatureNode[]>([]);
-  const [volunteerNodes, setVolunteerNodes] = useState<MapFeatureNode[]>([]);
+  const [disasterNodes, setDisasterNodes] = useState<MapFeatureNode[]>(MOCK_DISASTERS);
+  const [volunteerNodes, setVolunteerNodes] = useState<MapFeatureNode[]>(MOCK_VOLUNTEERS);
+  const [hospitalNodes, setHospitalNodes] = useState<MapFeatureNode[]>(MOCK_HOSPITALS);
+  const [shelterNodes, setShelterNodes] = useState<MapFeatureNode[]>(MOCK_SHELTERS);
   const [selectedNode, setSelectedNode] = useState<MapFeatureNode | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Basemap style options
+  // Perspective Mode: 2D vs 3D
+  const [is3D, setIs3D] = useState(false);
+
+  // God's Eye Mode
+  const [isGodsEye, setIsGodsEye] = useState(false);
+  const [activeSector, setActiveSector] = useState<string>('pan-india');
+
+  // Category Filter: 'ALL' | 'HAZARDS' | 'VOLUNTEERS' | 'HOSPITALS' | 'SHELTERS'
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'HAZARDS' | 'VOLUNTEERS' | 'HOSPITALS' | 'SHELTERS'>('ALL');
+
+  // Volunteer availability filter: 'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'
+  const [volunteerFilter, setVolunteerFilter] = useState<'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'>('ALL');
+
+  // Basemap style options (100% Free, Zero API Keys, Zero Watermarks)
   const BASEMAPS = {
     voyager: {
       name: '🗺️ Real Map',
       tiles: [
-        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-        'https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
-        'https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
       ],
-      attribution: '&copy; OpenStreetMap & CARTO',
+      attribution: '&copy; Esri World Street Map',
     },
     satellite: {
       name: '🛰️ Satellite HD',
@@ -78,11 +83,9 @@ export default function DisasterGISMap() {
     dark: {
       name: '🌑 Dark Tactical',
       tiles: [
-        'https://a.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
-        'https://b.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
-        'https://c.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png',
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
       ],
-      attribution: '&copy; OpenStreetMap & CARTO',
+      attribution: '&copy; Esri Dark Canvas & OpenStreetMap',
     },
     topo: {
       name: '⛰️ Topographic',
@@ -95,8 +98,6 @@ export default function DisasterGISMap() {
 
   const [selectedBasemap, setSelectedBasemap] = useState<keyof typeof BASEMAPS>('voyager');
 
-  // Volunteer availability filter: 'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'
-  const [volunteerFilter, setVolunteerFilter] = useState<'ALL' | 'AVAILABLE' | 'BUSY' | 'OFFLINE'>('ALL');
   const [isLayersOpen, setIsLayersOpen] = useState(false);
   const [isTimelineOpen, setIsTimelineOpen] = useState(false);
   const [isLegendOpen, setIsLegendOpen] = useState(false);
@@ -106,28 +107,26 @@ export default function DisasterGISMap() {
     severityHeatmap: true,
     disasters: true,
     volunteers: true,
-    weatherRadar: false, // Default false to keep real basemap clean
-    hazardZones: true,
-    bhuvanWms: false,
-    cyclone: true,
-    flood: true,
     hospitals: true,
     shelters: true,
+    weatherRadar: false,
+    hazardZones: true,
+    buildings3D: true,
   });
 
   const [searchQuery, setSearchQuery] = useState('');
 
-  // 1. Fetch Disasters and Volunteers in Parallel
+  // 1. Fetch Disasters and Volunteers with Resilient Offline Fallback
   const fetchData = async () => {
     setLoading(true);
     try {
       const [disastersRes, volunteersRes] = await Promise.all([
-        fetch('/api/disasters').then(r => r.json()).catch(() => []),
-        fetch('/api/volunteers').then(r => r.json()).catch(() => [])
+        fetch('/api/disasters').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch('/api/volunteers').then(r => r.ok ? r.json() : null).catch(() => null)
       ]);
 
-      // Map Disasters
-      if (Array.isArray(disastersRes)) {
+      // Map Disasters if available from API; otherwise keep rich fallback
+      if (Array.isArray(disastersRes) && disastersRes.length > 0) {
         const mappedDisasters: MapFeatureNode[] = disastersRes.map((d: any) => ({
           id: d.id,
           name: d.name || d.title || 'Disaster Incident',
@@ -146,10 +145,12 @@ export default function DisasterGISMap() {
           affectedPop: d.affected_pop ?? d.affectedPop,
         }));
         setDisasterNodes(mappedDisasters);
+      } else {
+        setDisasterNodes(MOCK_DISASTERS);
       }
 
-      // Map Volunteers
-      if (Array.isArray(volunteersRes)) {
+      // Map Volunteers if available from API; otherwise keep rich fallback
+      if (Array.isArray(volunteersRes) && volunteersRes.length > 0) {
         const mappedVolunteers: MapFeatureNode[] = volunteersRes.map((v: any) => ({
           id: v.id,
           name: v.name,
@@ -169,9 +170,18 @@ export default function DisasterGISMap() {
           contact: v.phone || '+91 98765 43210',
         }));
         setVolunteerNodes(mappedVolunteers);
+      } else {
+        setVolunteerNodes(MOCK_VOLUNTEERS);
       }
+
+      setHospitalNodes(MOCK_HOSPITALS);
+      setShelterNodes(MOCK_SHELTERS);
     } catch (err) {
-      console.error('Error loading GIS dataset:', err);
+      console.warn('GIS API connection offline, utilizing high-precision tactical fallback:', err);
+      setDisasterNodes(MOCK_DISASTERS);
+      setVolunteerNodes(MOCK_VOLUNTEERS);
+      setHospitalNodes(MOCK_HOSPITALS);
+      setShelterNodes(MOCK_SHELTERS);
     } finally {
       setLoading(false);
     }
@@ -190,7 +200,7 @@ export default function DisasterGISMap() {
         body: JSON.stringify({ volunteer_id: volunteerId, availability: newStatus }),
       });
     } catch (e) {
-      console.warn('Status sync error:', e);
+      console.warn('Status sync notice:', e);
     }
 
     setVolunteerNodes(prev => prev.map(v => v.id === volunteerId ? { ...v, status: newStatus } : v));
@@ -199,11 +209,11 @@ export default function DisasterGISMap() {
     }
   };
 
-  // 2. Initialize MapLibre GL Canvas with Selected Real-World Basemap
+  // 2. Initialize MapLibre GL Canvas (Once)
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    const currentBase = BASEMAPS[selectedBasemap] || BASEMAPS.voyager;
+    const initialBase = BASEMAPS[selectedBasemap] || BASEMAPS.voyager;
 
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
@@ -213,9 +223,30 @@ export default function DisasterGISMap() {
         sources: {
           'basemap-tiles': {
             type: 'raster',
-            tiles: currentBase.tiles,
+            tiles: initialBase.tiles,
             tileSize: 256,
-            attribution: currentBase.attribution,
+            attribution: initialBase.attribution,
+          },
+          'basemap-ref-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+            ],
+            tileSize: 256,
+          },
+          'basemap-places-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+            ],
+            tileSize: 256,
+          },
+          'basemap-transport-tiles': {
+            type: 'raster',
+            tiles: [
+              'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}',
+            ],
+            tileSize: 256,
           },
         },
         layers: [
@@ -226,18 +257,49 @@ export default function DisasterGISMap() {
             minzoom: 0,
             maxzoom: 19,
           },
+          {
+            id: 'basemap-ref-layer',
+            type: 'raster',
+            source: 'basemap-ref-tiles',
+            minzoom: 0,
+            maxzoom: 19,
+            layout: {
+              visibility: selectedBasemap === 'dark' ? 'visible' : 'none',
+            },
+          },
+          {
+            id: 'basemap-transport-layer',
+            type: 'raster',
+            source: 'basemap-transport-tiles',
+            minzoom: 0,
+            maxzoom: 19,
+            layout: {
+              visibility: (selectedBasemap === 'dark' || selectedBasemap === 'satellite') ? 'visible' : 'none',
+            },
+          },
+          {
+            id: 'basemap-places-layer',
+            type: 'raster',
+            source: 'basemap-places-tiles',
+            minzoom: 0,
+            maxzoom: 19,
+            layout: {
+              visibility: (selectedBasemap === 'dark' || selectedBasemap === 'satellite') ? 'visible' : 'none',
+            },
+          },
         ],
       },
       center: [78.9629, 20.5937], // Centered on India
       zoom: 4.8,
-      pitch: 25,
+      pitch: is3D ? 60 : 0,
+      bearing: is3D ? -15 : 0,
     });
 
     mapRef.current = map;
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
 
     map.on('load', async () => {
-      // Setup GeoJSON Source for Severity Heatmap
+      // GeoJSON Source for Severity Heatmap
       map.addSource('disaster-heatmap-source', {
         type: 'geojson',
         data: {
@@ -246,7 +308,7 @@ export default function DisasterGISMap() {
         },
       });
 
-      // Add MapLibre GPU-Accelerated Heatmap Layer with high vibrancy
+      // Heatmap Layer
       map.addLayer({
         id: 'disaster-heatmap-layer',
         type: 'heatmap',
@@ -286,7 +348,7 @@ export default function DisasterGISMap() {
         },
       });
 
-      // Add Tactical Hazard Zone Buffer Source
+      // Tactical Hazard Zone Buffer Source
       map.addSource('hazard-zone-buffer', {
         type: 'geojson',
         data: {
@@ -316,18 +378,121 @@ export default function DisasterGISMap() {
         },
       });
 
-      // Add Live Weather Radar Layer if active
+      // Live Weather Radar Layer if active
       if (activeLayers.weatherRadar) {
         await addRainViewerRadarLayer(map);
       }
     });
 
+    // ResizeObserver to ensure canvas resizing on window changes or panel toggles
+    const resizeObserver = new ResizeObserver(() => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    });
+    resizeObserver.observe(mapContainerRef.current);
+
     return () => {
+      resizeObserver.disconnect();
       map.remove();
     };
+  }, []);
+
+  // 3. Basemap Dynamic Switcher without Tearing Down Canvas
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+
+    const currentBase = BASEMAPS[selectedBasemap] || BASEMAPS.voyager;
+    const tileSource = map.getSource('basemap-tiles') as maplibregl.RasterTileSource;
+    if (tileSource && typeof tileSource.setTiles === 'function') {
+      tileSource.setTiles(currentBase.tiles);
+    }
+
+    // Dynamic visibility for tactical dark and satellite boundary, road, & label overlays
+    const isDark = selectedBasemap === 'dark';
+    const isSatellite = selectedBasemap === 'satellite';
+
+    if (map.getLayer('basemap-ref-layer')) {
+      map.setLayoutProperty('basemap-ref-layer', 'visibility', isDark ? 'visible' : 'none');
+    }
+    if (map.getLayer('basemap-transport-layer')) {
+      map.setLayoutProperty('basemap-transport-layer', 'visibility', (isDark || isSatellite) ? 'visible' : 'none');
+    }
+    if (map.getLayer('basemap-places-layer')) {
+      map.setLayoutProperty('basemap-places-layer', 'visibility', (isDark || isSatellite) ? 'visible' : 'none');
+    }
   }, [selectedBasemap]);
 
-  // 3. Update Heatmap & Hazard Zone Data Sources when Disasters Change
+  // 4. Toggle 2D vs 3D Perspective Animation ("map mai 2d-3d")
+  const toggle3D = () => {
+    const map = mapRef.current;
+    const nextState = !is3D;
+    setIs3D(nextState);
+
+    if (!map) return;
+
+    if (nextState) {
+      // Transition to 3D Tactical Perspective
+      map.easeTo({
+        pitch: 60,
+        bearing: -15,
+        duration: 1200,
+      });
+    } else {
+      // Transition to 2D Top-Down Orthographic
+      map.easeTo({
+        pitch: 0,
+        bearing: 0,
+        duration: 1000,
+      });
+    }
+  };
+
+  // 5. God's Eye Mode Toggle ("god'seyeview")
+  const toggleGodsEye = () => {
+    const map = mapRef.current;
+    const nextState = !isGodsEye;
+    setIsGodsEye(nextState);
+
+    if (!map) return;
+
+    if (nextState) {
+      setActiveSector('pan-india');
+      setIs3D(true);
+      // Zoom out to full panoramic India command altitude
+      map.flyTo({
+        center: [78.9629, 21.5937],
+        zoom: 4.8,
+        pitch: 52,
+        bearing: -10,
+        duration: 2000,
+      });
+    } else {
+      map.easeTo({
+        pitch: is3D ? 45 : 0,
+        bearing: 0,
+        duration: 1200,
+      });
+    }
+  };
+
+  // Teleport to Tactical Sector in God's Eye Mode
+  const handleSelectSector = (sector: TacticalSector) => {
+    setActiveSector(sector.id);
+    const map = mapRef.current;
+    if (!map) return;
+
+    map.flyTo({
+      center: sector.center,
+      zoom: sector.zoom,
+      pitch: sector.pitch,
+      bearing: sector.bearing,
+      duration: 2200,
+    });
+  };
+
+  // 6. Update Heatmap & Hazard Zone Data Sources when Disasters Change
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !map.isStyleLoaded()) return;
@@ -363,7 +528,7 @@ export default function DisasterGISMap() {
       });
     }
 
-    // Update Hazard Zone Buffers (Polygons around each disaster)
+    // Update Hazard Zone Buffers
     const hazardSource = map.getSource('hazard-zone-buffer') as maplibregl.GeoJSONSource;
     if (hazardSource) {
       const bufferFeatures = disasterNodes.map(d => {
@@ -376,46 +541,33 @@ export default function DisasterGISMap() {
         features: bufferFeatures,
       });
     }
-  }, [disasterNodes, selectedBasemap]);
+  }, [disasterNodes]);
 
-  // 4. Toggle Heatmap Layer Visibility
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.getLayer('disaster-heatmap-layer')) return;
-    map.setLayoutProperty(
-      'disaster-heatmap-layer',
-      'visibility',
-      activeLayers.severityHeatmap ? 'visible' : 'none'
-    );
-  }, [activeLayers.severityHeatmap]);
-
-  // 4b. Toggle Tactical Hazard Buffer Zones Visibility
+  // 7. Toggle Heatmap & Hazard Zone Layer Visibility
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
+    if (map.getLayer('disaster-heatmap-layer')) {
+      map.setLayoutProperty('disaster-heatmap-layer', 'visibility', activeLayers.severityHeatmap ? 'visible' : 'none');
+    }
     if (map.getLayer('hazard-zone-fill')) {
       map.setLayoutProperty('hazard-zone-fill', 'visibility', activeLayers.hazardZones ? 'visible' : 'none');
     }
     if (map.getLayer('hazard-zone-line')) {
       map.setLayoutProperty('hazard-zone-line', 'visibility', activeLayers.hazardZones ? 'visible' : 'none');
     }
-  }, [activeLayers.hazardZones]);
+    if (map.getLayer('rainviewer-radar-layer')) {
+      map.setLayoutProperty('rainviewer-radar-layer', 'visibility', activeLayers.weatherRadar ? 'visible' : 'none');
+    }
+  }, [activeLayers]);
 
-  // 5. Toggle Weather Radar Layer Visibility
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !map.getLayer('rainviewer-radar-layer')) return;
-    map.setLayoutProperty(
-      'rainviewer-radar-layer',
-      'visibility',
-      activeLayers.weatherRadar ? 'visible' : 'none'
-    );
-  }, [activeLayers.weatherRadar]);
+  // 8. Custom Marker Element Creators with 3D Stalk Shadowing Support
 
-  // 6. Helper to Generate Disaster Subtype Tactical Marker HTML
+  // 8a. Disaster Marker
   const createDisasterMarkerElement = (node: MapFeatureNode) => {
     const el = document.createElement('div');
-    el.className = 'custom-disaster-marker cursor-pointer transition-transform hover:scale-125 z-10';
+    el.className = `custom-disaster-marker cursor-pointer transition-transform hover:scale-125 z-20 ${is3D ? 'marker-3d-elevated' : ''}`;
 
     const sub = (node.subType || '').toLowerCase();
     const isCritical = node.severity === 'CRITICAL';
@@ -459,30 +611,33 @@ export default function DisasterGISMap() {
     }
 
     el.innerHTML = `
-      <div class="relative flex items-center justify-center">
-        ${isCritical || isHigh ? `<span class="absolute inline-flex h-9 w-9 rounded-full ${pingColor} opacity-50 animate-ping"></span>` : ''}
+      <div class="relative flex flex-col items-center justify-center">
+        ${isCritical || isHigh ? `<span class="absolute inline-flex h-10 w-10 rounded-full ${pingColor} opacity-50 animate-ping"></span>` : ''}
         <div class="relative flex items-center justify-center w-8 h-8 rounded-full ${bgColor} shadow-2xl border-2 ${ringColor}">
           ${iconSvg}
         </div>
-        <div class="absolute -bottom-4 px-1.5 py-0.2 rounded bg-surface-lowest/90 border border-surface-highest text-[9px] font-mono font-bold text-tactical-text shadow-md whitespace-nowrap pointer-events-none">
+        <div class="mt-1 px-1.5 py-0.5 rounded bg-surface-lowest/95 border border-surface-highest text-[9px] font-mono font-bold text-tactical-text shadow-md whitespace-nowrap pointer-events-none">
           ${node.subType}
         </div>
+        ${is3D ? '<div class="w-2.5 h-1 bg-black/60 rounded-full filter blur-[1px] mt-0.5"></div>' : ''}
       </div>
     `;
 
     return el;
   };
 
-  // 7. Helper to Generate Volunteer Tactical Marker HTML
+  // 8b. Volunteer Marker
   const createVolunteerMarkerElement = (node: MapFeatureNode) => {
     const el = document.createElement('div');
-    el.className = 'custom-volunteer-marker cursor-pointer transition-transform hover:scale-125 z-20';
+    el.className = `custom-volunteer-marker cursor-pointer transition-transform hover:scale-125 z-20 ${is3D ? 'marker-3d-elevated' : ''}`;
 
     const isAvail = node.status === 'AVAILABLE';
     const isBusy = node.status === 'BUSY';
 
     const dotColor = isAvail ? 'bg-emerald-400' : isBusy ? 'bg-amber-400' : 'bg-slate-400';
-    const ringPulse = isAvail ? '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border border-surface-lowest"></span></span>' : `<span class="absolute -top-1 -right-1 inline-flex rounded-full h-2.5 w-2.5 ${dotColor} border border-surface-lowest"></span>`;
+    const ringPulse = isAvail 
+      ? '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border border-surface-lowest"></span></span>' 
+      : `<span class="absolute -top-1 -right-1 inline-flex rounded-full h-2.5 w-2.5 ${dotColor} border border-surface-lowest"></span>`;
 
     el.innerHTML = `
       <div class="relative flex flex-col items-center">
@@ -490,16 +645,61 @@ export default function DisasterGISMap() {
           <svg class="w-3.5 h-3.5 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
           ${ringPulse}
         </div>
-        <div class="mt-0.5 px-1 rounded bg-surface-low/90 border border-surface-highest/80 text-[8px] font-mono text-tactical-muted whitespace-nowrap pointer-events-none">
+        <div class="mt-0.5 px-1.5 py-0.5 rounded bg-surface-low/95 border border-surface-highest/80 text-[8px] font-mono text-tactical-muted whitespace-nowrap pointer-events-none">
           ${node.name.split(' ')[0]}
         </div>
+        ${is3D ? '<div class="w-2 h-0.5 bg-black/60 rounded-full filter blur-[1px] mt-0.5"></div>' : ''}
       </div>
     `;
 
     return el;
   };
 
-  // 8. Render All Markers (Disasters + Volunteers)
+  // 8c. Hospital Marker
+  const createHospitalMarkerElement = (node: MapFeatureNode) => {
+    const el = document.createElement('div');
+    el.className = `custom-hospital-marker cursor-pointer transition-transform hover:scale-125 z-10 ${is3D ? 'marker-3d-elevated' : ''}`;
+
+    el.innerHTML = `
+      <div class="relative flex flex-col items-center">
+        <div class="relative flex items-center justify-center w-7 h-7 rounded-lg bg-cyan-950 border-2 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.4)]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 6v12M6 12h12"/></svg>
+        </div>
+        <div class="mt-0.5 px-1.5 py-0.5 rounded bg-surface-low/95 border border-cyan-500/40 text-[8px] font-mono text-cyan-300 whitespace-nowrap pointer-events-none">
+          ${node.bedsAvailable ?? 80} BEDS
+        </div>
+        ${is3D ? '<div class="w-2 h-0.5 bg-black/60 rounded-full filter blur-[1px] mt-0.5"></div>' : ''}
+      </div>
+    `;
+
+    return el;
+  };
+
+  // 8d. Shelter Marker
+  const createShelterMarkerElement = (node: MapFeatureNode) => {
+    const el = document.createElement('div');
+    el.className = `custom-shelter-marker cursor-pointer transition-transform hover:scale-125 z-10 ${is3D ? 'marker-3d-elevated' : ''}`;
+
+    const occupancyRate = (node.capacity && node.currentOccupancy)
+      ? Math.round((node.currentOccupancy / node.capacity) * 100)
+      : 70;
+
+    el.innerHTML = `
+      <div class="relative flex flex-col items-center">
+        <div class="relative flex items-center justify-center w-7 h-7 rounded-lg bg-violet-950 border-2 border-violet-400 text-violet-300 shadow-[0_0_12px_rgba(139,92,246,0.4)]">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div class="mt-0.5 px-1.5 py-0.5 rounded bg-surface-low/95 border border-violet-500/40 text-[8px] font-mono text-violet-300 whitespace-nowrap pointer-events-none">
+          ${occupancyRate}% OCC
+        </div>
+        ${is3D ? '<div class="w-2 h-0.5 bg-black/60 rounded-full filter blur-[1px] mt-0.5"></div>' : ''}
+      </div>
+    `;
+
+    return el;
+  };
+
+  // 9. Render All Active Markers
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -508,32 +708,55 @@ export default function DisasterGISMap() {
     markersRef.current = [];
 
     // Filter disasters
-    const visibleDisasters = activeLayers.disasters ? disasterNodes.filter(n =>
-      searchQuery === '' ||
-      n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (n.location && n.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (n.state && n.state.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      n.subType.toLowerCase().includes(searchQuery.toLowerCase())
-    ) : [];
+    const visibleDisasters = (activeLayers.disasters && (categoryFilter === 'ALL' || categoryFilter === 'HAZARDS')) 
+      ? disasterNodes.filter(n =>
+          searchQuery === '' ||
+          n.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (n.location && n.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (n.state && n.state.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          n.subType.toLowerCase().includes(searchQuery.toLowerCase())
+        ) 
+      : [];
 
     // Filter volunteers
-    const visibleVolunteers = activeLayers.volunteers ? volunteerNodes.filter(v => {
-      const matchesSearch = searchQuery === '' ||
-        v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (v.location && v.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (v.skills && v.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())));
-      
-      const matchesFilter = volunteerFilter === 'ALL' || v.status === volunteerFilter;
+    const visibleVolunteers = (activeLayers.volunteers && (categoryFilter === 'ALL' || categoryFilter === 'VOLUNTEERS'))
+      ? volunteerNodes.filter(v => {
+          const matchesSearch = searchQuery === '' ||
+            v.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (v.location && v.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (v.skills && v.skills.some(s => s.toLowerCase().includes(searchQuery.toLowerCase())));
+          
+          const matchesStatus = volunteerFilter === 'ALL' || v.status === volunteerFilter;
+          return matchesSearch && matchesStatus;
+        })
+      : [];
 
-      return matchesSearch && matchesFilter;
-    }) : [];
+    // Filter hospitals
+    const visibleHospitals = (activeLayers.hospitals && (categoryFilter === 'ALL' || categoryFilter === 'HOSPITALS'))
+      ? hospitalNodes.filter(h =>
+          searchQuery === '' ||
+          h.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (h.location && h.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (h.state && h.state.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : [];
+
+    // Filter shelters
+    const visibleShelters = (activeLayers.shelters && (categoryFilter === 'ALL' || categoryFilter === 'SHELTERS'))
+      ? shelterNodes.filter(s =>
+          searchQuery === '' ||
+          s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (s.location && s.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (s.state && s.state.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : [];
 
     // Render Disaster Markers
     visibleDisasters.forEach((node) => {
       const el = createDisasterMarkerElement(node);
       el.addEventListener('click', () => {
         setSelectedNode(node);
-        map.flyTo({ center: [node.lng, node.lat], zoom: 8.5, pitch: 45, duration: 1200 });
+        map.flyTo({ center: [node.lng, node.lat], zoom: 8.5, pitch: is3D ? 55 : 0, duration: 1200 });
       });
 
       const marker = new maplibregl.Marker({ element: el })
@@ -548,7 +771,7 @@ export default function DisasterGISMap() {
       const el = createVolunteerMarkerElement(node);
       el.addEventListener('click', () => {
         setSelectedNode(node);
-        map.flyTo({ center: [node.lng, node.lat], zoom: 10, pitch: 40, duration: 1200 });
+        map.flyTo({ center: [node.lng, node.lat], zoom: 10, pitch: is3D ? 50 : 0, duration: 1200 });
       });
 
       const marker = new maplibregl.Marker({ element: el })
@@ -558,7 +781,47 @@ export default function DisasterGISMap() {
       markersRef.current.push(marker);
     });
 
-  }, [disasterNodes, volunteerNodes, activeLayers.disasters, activeLayers.volunteers, volunteerFilter, searchQuery]);
+    // Render Hospital Markers
+    visibleHospitals.forEach((node) => {
+      const el = createHospitalMarkerElement(node);
+      el.addEventListener('click', () => {
+        setSelectedNode(node);
+        map.flyTo({ center: [node.lng, node.lat], zoom: 10, pitch: is3D ? 45 : 0, duration: 1200 });
+      });
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([node.lng, node.lat])
+        .addTo(map);
+
+      markersRef.current.push(marker);
+    });
+
+    // Render Shelter Markers
+    visibleShelters.forEach((node) => {
+      const el = createShelterMarkerElement(node);
+      el.addEventListener('click', () => {
+        setSelectedNode(node);
+        map.flyTo({ center: [node.lng, node.lat], zoom: 10, pitch: is3D ? 45 : 0, duration: 1200 });
+      });
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([node.lng, node.lat])
+        .addTo(map);
+
+      markersRef.current.push(marker);
+    });
+
+  }, [
+    disasterNodes, 
+    volunteerNodes, 
+    hospitalNodes, 
+    shelterNodes, 
+    activeLayers, 
+    categoryFilter, 
+    volunteerFilter, 
+    searchQuery, 
+    is3D
+  ]);
 
   const toggleFullscreen = () => {
     if (!mapContainerRef.current) return;
@@ -588,189 +851,212 @@ export default function DisasterGISMap() {
       {/* Map Canvas Container */}
       <div ref={mapContainerRef} className="w-full h-full" />
 
-      {/* Unified Sleek Top HUD Bar */}
-      <div className="absolute top-4 left-4 right-4 z-30 flex flex-wrap items-center justify-between gap-2.5 pointer-events-none">
-        
-        {/* Left: Search & Metrics */}
-        <div className="flex items-center space-x-2 bg-surface-low/95 backdrop-blur-xl p-1.5 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto">
-          <div className="flex items-center space-x-2 pl-2 pr-1 py-0.5">
-            <Search className="w-4 h-4 text-primary shrink-0" />
-            <input
-              type="text"
-              placeholder="Search Cyclone, Flood, State, or Paramedic..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-44 sm:w-64 bg-transparent text-xs text-tactical-text focus:outline-none placeholder-tactical-muted font-sans"
-            />
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="text-[10px] text-tactical-muted hover:text-tactical-text px-1"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          <div className="hidden sm:flex items-center space-x-1 pl-1 border-l border-surface-highest">
-            <span className="px-2 py-0.5 rounded-lg bg-emergency/20 text-emergency text-[10px] font-bold border border-emergency/30">
-              {disasterNodes.length} HAZARDS
-            </span>
-          </div>
-        </div>
-
-        {/* Center: Volunteer Status Filter Pills */}
-        <div className="hidden lg:flex items-center space-x-1 bg-surface-low/95 backdrop-blur-xl p-1 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto">
-          <span className="text-[10px] text-tactical-muted uppercase font-bold px-2 flex items-center space-x-1">
-            <Users className="w-3.5 h-3.5 text-primary" />
-            <span>Volunteers:</span>
-          </span>
-
-          <button
-            onClick={() => setVolunteerFilter('ALL')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition-all ${
-              volunteerFilter === 'ALL'
-                ? 'bg-primary text-surface-lowest shadow-sm'
-                : 'text-tactical-muted hover:text-tactical-text hover:bg-surface-high'
-            }`}
-          >
-            All ({volunteerStats.total})
-          </button>
-
-          <button
-            onClick={() => setVolunteerFilter('AVAILABLE')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
-              volunteerFilter === 'AVAILABLE'
-                ? 'bg-emerald-500 text-surface-lowest shadow-sm'
-                : 'text-emerald-400 hover:bg-emerald-500/10'
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Available ({volunteerStats.available})</span>
-          </button>
-
-          <button
-            onClick={() => setVolunteerFilter('BUSY')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
-              volunteerFilter === 'BUSY'
-                ? 'bg-amber-500 text-surface-lowest shadow-sm'
-                : 'text-amber-400 hover:bg-amber-500/10'
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-            <span>Deployed ({volunteerStats.busy})</span>
-          </button>
-
-          <button
-            onClick={() => setVolunteerFilter('OFFLINE')}
-            className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center space-x-1.5 transition-all ${
-              volunteerFilter === 'OFFLINE'
-                ? 'bg-slate-500 text-surface-lowest shadow-sm'
-                : 'text-slate-400 hover:bg-slate-500/10'
-            }`}
-          >
-            <span>Standby ({volunteerStats.offline})</span>
-          </button>
-        </div>
-
-        {/* Right: Quick Action Controls */}
-        <div className="flex items-center space-x-1.5 bg-surface-low/95 backdrop-blur-xl p-1 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto text-tactical-text">
+      {/* God's Eye View HUD Overlay (When Activated) */}
+      {isGodsEye ? (
+        <GodsEyeHud
+          activeSector={activeSector}
+          onSelectSector={handleSelectSector}
+          onExit={toggleGodsEye}
+          disasters={disasterNodes}
+          volunteers={volunteerNodes}
+          hospitals={hospitalNodes}
+          shelters={shelterNodes}
+          is3D={is3D}
+          onToggle3D={toggle3D}
+        />
+      ) : (
+        /* Standard Command HUD Bar */
+        <div className="absolute top-4 left-4 right-4 z-30 flex flex-wrap items-center justify-between gap-2.5 pointer-events-none">
           
-          {/* Basemap Switcher Pill */}
-          <div className="hidden md:flex items-center bg-surface-high/60 p-0.5 rounded-xl border border-surface-highest">
-            <button
-              onClick={() => setSelectedBasemap('voyager')}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                selectedBasemap === 'voyager' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
-              }`}
-              title="Real-World Detailed Streets & Terrain Map"
-            >
-              🗺️ Map
-            </button>
-            <button
-              onClick={() => setSelectedBasemap('satellite')}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                selectedBasemap === 'satellite' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
-              }`}
-              title="Real High-Resolution Esri Satellite Imagery"
-            >
-              🛰️ Sat
-            </button>
-            <button
-              onClick={() => setSelectedBasemap('dark')}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                selectedBasemap === 'dark' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
-              }`}
-              title="Dark Night Tactical Mode"
-            >
-              🌑 Dark
-            </button>
-            <button
-              onClick={() => setSelectedBasemap('topo')}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                selectedBasemap === 'topo' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
-              }`}
-              title="Topographic Elevation Map"
-            >
-              ⛰️ Topo
-            </button>
+          {/* Left: Search & Category Filter Pills */}
+          <div className="flex items-center space-x-2 bg-surface-low/95 backdrop-blur-xl p-1.5 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto">
+            <div className="flex items-center space-x-2 pl-2 pr-1 py-0.5">
+              <Search className="w-4 h-4 text-primary shrink-0" />
+              <input
+                type="text"
+                placeholder="Search Cyclone, Flood, Hospital, Paramedic..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-40 sm:w-60 bg-transparent text-xs text-tactical-text focus:outline-none placeholder-tactical-muted font-sans"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery('')}
+                  className="text-[10px] text-tactical-muted hover:text-tactical-text px-1"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Quick Category Switcher */}
+            <div className="hidden md:flex items-center space-x-1 pl-1 border-l border-surface-highest">
+              <button
+                onClick={() => setCategoryFilter('ALL')}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                  categoryFilter === 'ALL' ? 'bg-primary text-surface-lowest' : 'text-tactical-muted hover:text-tactical-text'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setCategoryFilter('HAZARDS')}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                  categoryFilter === 'HAZARDS' ? 'bg-emergency text-white' : 'text-emergency/80 hover:text-emergency'
+                }`}
+              >
+                Hazards ({disasterNodes.length})
+              </button>
+              <button
+                onClick={() => setCategoryFilter('VOLUNTEERS')}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                  categoryFilter === 'VOLUNTEERS' ? 'bg-emerald-500 text-surface-lowest' : 'text-emerald-400 hover:text-emerald-300'
+                }`}
+              >
+                Units ({volunteerNodes.length})
+              </button>
+              <button
+                onClick={() => setCategoryFilter('HOSPITALS')}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all ${
+                  categoryFilter === 'HOSPITALS' ? 'bg-cyan-500 text-surface-lowest' : 'text-cyan-400 hover:text-cyan-300'
+                }`}
+              >
+                Trauma ({hospitalNodes.length})
+              </button>
+            </div>
           </div>
 
-          {/* Heatmap Toggle */}
-          <button
-            onClick={() => setActiveLayers(prev => ({ ...prev, severityHeatmap: !prev.severityHeatmap }))}
-            className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
-              activeLayers.severityHeatmap ? 'bg-primary/20 text-primary border border-primary/40 shadow-sm' : 'hover:bg-surface-high text-tactical-muted'
-            }`}
-            title="Toggle GPU Disaster Severity Heatmap"
-          >
-            <Flame className={`w-3.5 h-3.5 ${activeLayers.severityHeatmap ? 'text-primary' : 'text-tactical-muted'}`} />
-            <span className="hidden sm:inline text-[11px] font-bold">Heatmap</span>
-          </button>
+          {/* Center: God's Eye Trigger & 2D/3D Perspective Switcher */}
+          <div className="flex items-center space-x-2 pointer-events-auto">
+            
+            {/* Master GOD'S EYE VIEW Button */}
+            <button
+              onClick={toggleGodsEye}
+              className="px-3.5 py-1.5 rounded-2xl bg-gradient-to-r from-primary to-orange-600 text-surface-lowest font-black text-xs flex items-center space-x-2 shadow-[0_0_20px_rgba(255,107,0,0.5)] border border-primary/50 hover:brightness-110 active:scale-95 transition-all"
+              title="Activate Panoramic Satellite Surveillance God's Eye Mode"
+            >
+              <Eye className="w-4 h-4 stroke-[3] animate-pulse" />
+              <span className="tracking-wider">GOD'S EYE VIEW</span>
+            </button>
 
-          {/* Rain Radar Toggle */}
-          <button
-            onClick={() => setActiveLayers(prev => ({ ...prev, weatherRadar: !prev.weatherRadar }))}
-            className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
-              activeLayers.weatherRadar ? 'bg-primary/20 text-primary border border-primary/40 shadow-sm' : 'hover:bg-surface-high text-tactical-muted'
-            }`}
-            title="Toggle Live RainViewer Doppler Radar"
-          >
-            <CloudRain className="w-3.5 h-3.5 text-primary" />
-            <span className="hidden sm:inline text-[11px] font-bold">Radar</span>
-          </button>
+            {/* 2D vs 3D Perspective Toggle Button */}
+            <div className="flex items-center bg-surface-low/95 backdrop-blur-xl p-1 rounded-2xl border border-surface-highest/80 shadow-2xl">
+              <button
+                onClick={toggle3D}
+                className={`px-3 py-1 rounded-xl text-xs font-bold flex items-center space-x-1.5 transition-all ${
+                  is3D
+                    ? 'bg-primary text-surface-lowest shadow-sm'
+                    : 'text-tactical-muted hover:text-tactical-text hover:bg-surface-high'
+                }`}
+                title="Toggle 2D Top-Down / 3D Tactical Perspective"
+              >
+                <Compass className={`w-3.5 h-3.5 ${is3D ? 'text-surface-lowest' : 'text-primary'}`} />
+                <span>{is3D ? '3D VIEW' : '2D FLAT'}</span>
+              </button>
+            </div>
 
-          {/* GIS Layers Dropdown Trigger */}
-          <button
-            onClick={() => setIsLayersOpen(!isLayersOpen)}
-            className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
-              isLayersOpen ? 'bg-primary text-surface-lowest font-bold' : 'hover:bg-surface-high text-tactical-text'
-            }`}
-            title="Toggle GIS Layers Menu"
-          >
-            <Layers className="w-3.5 h-3.5" />
-            <span className="text-[11px] font-bold">Layers ({activeLayersCount})</span>
-          </button>
+          </div>
 
-          {/* Refresh Data */}
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="p-1.5 rounded-xl hover:bg-surface-high text-xs transition-colors text-tactical-muted hover:text-tactical-text"
-            title="Refresh Live GIS Feeds"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-primary' : ''}`} />
-          </button>
+          {/* Right: Quick Action Controls */}
+          <div className="flex items-center space-x-1.5 bg-surface-low/95 backdrop-blur-xl p-1 rounded-2xl border border-surface-highest/80 shadow-2xl pointer-events-auto text-tactical-text">
+            
+            {/* Basemap Switcher Pill */}
+            <div className="hidden lg:flex items-center bg-surface-high/60 p-0.5 rounded-xl border border-surface-highest">
+              <button
+                onClick={() => setSelectedBasemap('voyager')}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  selectedBasemap === 'voyager' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+                }`}
+                title="Detailed Streets & Topography Map"
+              >
+                🗺️ Map
+              </button>
+              <button
+                onClick={() => setSelectedBasemap('satellite')}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  selectedBasemap === 'satellite' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+                }`}
+                title="Real High-Resolution Esri Satellite Imagery"
+              >
+                🛰️ Sat
+              </button>
+              <button
+                onClick={() => setSelectedBasemap('dark')}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  selectedBasemap === 'dark' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+                }`}
+                title="Dark Tactical Night Operations"
+              >
+                🌑 Dark
+              </button>
+              <button
+                onClick={() => setSelectedBasemap('topo')}
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  selectedBasemap === 'topo' ? 'bg-primary text-surface-lowest shadow-sm' : 'text-tactical-muted hover:text-tactical-text'
+                }`}
+                title="Topographic Elevation Map"
+              >
+                ⛰️ Topo
+              </button>
+            </div>
 
-          {/* Fullscreen */}
-          <button
-            onClick={toggleFullscreen}
-            className="p-1.5 rounded-xl hover:bg-surface-high text-xs transition-colors"
-            title="Toggle Fullscreen GIS"
-          >
-            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-          </button>
+            {/* Heatmap Toggle */}
+            <button
+              onClick={() => setActiveLayers(prev => ({ ...prev, severityHeatmap: !prev.severityHeatmap }))}
+              className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
+                activeLayers.severityHeatmap ? 'bg-primary/20 text-primary border border-primary/40 shadow-sm' : 'hover:bg-surface-high text-tactical-muted'
+              }`}
+              title="Toggle GPU Disaster Severity Heatmap"
+            >
+              <Flame className={`w-3.5 h-3.5 ${activeLayers.severityHeatmap ? 'text-primary' : 'text-tactical-muted'}`} />
+              <span className="hidden sm:inline text-[11px] font-bold">Heatmap</span>
+            </button>
+
+            {/* Rain Radar Toggle */}
+            <button
+              onClick={() => setActiveLayers(prev => ({ ...prev, weatherRadar: !prev.weatherRadar }))}
+              className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
+                activeLayers.weatherRadar ? 'bg-primary/20 text-primary border border-primary/40 shadow-sm' : 'hover:bg-surface-high text-tactical-muted'
+              }`}
+              title="Toggle Live RainViewer Doppler Radar"
+            >
+              <CloudRain className="w-3.5 h-3.5 text-primary" />
+              <span className="hidden sm:inline text-[11px] font-bold">Radar</span>
+            </button>
+
+            {/* GIS Layers Dropdown Trigger */}
+            <button
+              onClick={() => setIsLayersOpen(!isLayersOpen)}
+              className={`px-2.5 py-1.5 rounded-xl text-xs flex items-center space-x-1.5 transition-all ${
+                isLayersOpen ? 'bg-primary text-surface-lowest font-bold' : 'hover:bg-surface-high text-tactical-text'
+              }`}
+              title="Toggle GIS Layers Menu"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span className="text-[11px] font-bold">Layers ({activeLayersCount})</span>
+            </button>
+
+            {/* Refresh Data */}
+            <button
+              onClick={fetchData}
+              disabled={loading}
+              className="p-1.5 rounded-xl hover:bg-surface-high text-xs transition-colors text-tactical-muted hover:text-tactical-text"
+              title="Refresh Live GIS Feeds"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-primary' : ''}`} />
+            </button>
+
+            {/* Fullscreen */}
+            <button
+              onClick={toggleFullscreen}
+              className="p-1.5 rounded-xl hover:bg-surface-high text-xs transition-colors"
+              title="Toggle Fullscreen GIS"
+            >
+              {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Layer Selector Dropdown Component */}
       <MapLayerSelector 
@@ -779,10 +1065,12 @@ export default function DisasterGISMap() {
         selectedBasemap={selectedBasemap}
         setSelectedBasemap={setSelectedBasemap}
         isOpen={isLayersOpen} 
-        onClose={() => setIsLayersOpen(false)} 
+        onClose={() => setIsLayersOpen(false)}
+        is3D={is3D}
+        onToggle3D={toggle3D}
       />
 
-      {/* Slide-In Inspector Drawer (Appears Only When Marker is Clicked) */}
+      {/* Slide-In Inspector Drawer (Appears When Marker is Clicked) */}
       {selectedNode && (
         <MapPopupPanel 
           node={selectedNode} 
@@ -792,76 +1080,91 @@ export default function DisasterGISMap() {
       )}
 
       {/* Collapsible Minimal Bottom HUD Toolbar (Timeline & Legend) */}
-      <div className="absolute bottom-4 left-4 right-4 z-20 flex items-end justify-between pointer-events-none">
-        
-        {/* Compact Legend Pill */}
-        <div className="bg-surface-low/95 backdrop-blur-xl p-2 rounded-2xl border border-surface-highest shadow-2xl pointer-events-auto">
-          <button 
-            onClick={() => setIsLegendOpen(!isLegendOpen)}
-            className="flex items-center space-x-2 text-xs font-bold text-tactical-text px-1"
-          >
-            <Radio className="w-3.5 h-3.5 text-primary animate-pulse" />
-            <span className="text-[11px]">Legend</span>
-            {isLegendOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-          </button>
+      {!isGodsEye && (
+        <div className="absolute bottom-4 left-4 right-4 z-20 flex items-end justify-between pointer-events-none">
+          
+          {/* Compact Legend Pill */}
+          <div className="bg-surface-low/95 backdrop-blur-xl p-2 rounded-2xl border border-surface-highest shadow-2xl pointer-events-auto">
+            <button 
+              onClick={() => setIsLegendOpen(!isLegendOpen)}
+              className="flex items-center space-x-2 text-xs font-bold text-tactical-text px-1"
+            >
+              <Radio className="w-3.5 h-3.5 text-primary animate-pulse" />
+              <span className="text-[11px]">GIS Legend</span>
+              {isLegendOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+            </button>
 
-          {isLegendOpen && (
-            <div className="mt-2 pt-2 border-t border-surface-highest/80 space-y-1.5 text-[10px] animate-in fade-in-50 duration-150">
-              <div className="grid grid-cols-2 gap-x-3 gap-y-1">
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-violet-500"></span>
-                  <span>Cyclone 🌀</span>
+            {isLegendOpen && (
+              <div className="mt-2 pt-2 border-t border-surface-highest/80 space-y-1.5 text-[10px] animate-in fade-in-50 duration-150">
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-violet-500"></span>
+                    <span>Cyclone 🌀</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                    <span>Flood 🌊</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span>Wildfire 🔥</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-orange-500"></span>
+                    <span>Landslide ⛰️</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-1 pt-1 border-t border-surface-highest/50">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    <span className="text-emerald-400 font-semibold">Volunteer Unit</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                    <span className="text-cyan-400 font-semibold">Trauma Hospital</span>
+                  </div>
                 </div>
                 <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
-                  <span>Flood 🌊</span>
-                </div>
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span>Wildfire 🔥</span>
-                </div>
-                <div className="flex items-center space-x-1.5">
-                  <span className="w-2 h-2 rounded-full bg-orange-500"></span>
-                  <span>Landslide ⛰️</span>
+                  <span className="w-2 h-2 rounded-full bg-violet-400"></span>
+                  <span className="text-violet-400 font-semibold">Relief Shelter Camp</span>
                 </div>
               </div>
-              <div className="flex items-center space-x-1.5 pt-1 border-t border-surface-highest/50">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span className="text-emerald-400 font-bold">Active Responder</span>
+            )}
+          </div>
+
+          {/* Timeline Slider Center Bar */}
+          <div className="pointer-events-auto w-full max-w-lg mx-auto">
+            {isTimelineOpen ? (
+              <div className="relative">
+                <button 
+                  onClick={() => setIsTimelineOpen(false)}
+                  className="absolute -top-7 right-0 text-[10px] text-tactical-muted hover:text-tactical-text bg-surface-low/90 px-2 py-0.5 rounded-lg border border-surface-highest"
+                >
+                  Hide Timeline ✕
+                </button>
+                <MapTimelineSlider />
               </div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="flex justify-center">
+                <button
+                  onClick={() => setIsTimelineOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-surface-low/90 backdrop-blur-xl border border-surface-highest/80 text-[11px] font-bold text-tactical-text hover:text-primary shadow-tactical flex items-center space-x-1.5 transition-all"
+                >
+                  <Radio className="w-3.5 h-3.5 text-primary" />
+                  <span>Simulation Timeline (48h)</span>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
 
-        {/* Timeline Slider Center Bar */}
-        <div className="pointer-events-auto w-full max-w-lg mx-auto">
-          {isTimelineOpen ? (
-            <div className="relative">
-              <button 
-                onClick={() => setIsTimelineOpen(false)}
-                className="absolute -top-7 right-0 text-[10px] text-tactical-muted hover:text-tactical-text bg-surface-low/90 px-2 py-0.5 rounded-lg border border-surface-highest"
-              >
-                Hide Timeline ✕
-              </button>
-              <MapTimelineSlider />
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <button
-                onClick={() => setIsTimelineOpen(true)}
-                className="px-3 py-1.5 rounded-xl bg-surface-low/90 backdrop-blur-xl border border-surface-highest/80 text-[11px] font-bold text-tactical-text hover:text-primary shadow-tactical flex items-center space-x-1.5 transition-all"
-              >
-                <Radio className="w-3.5 h-3.5 text-primary" />
-                <span>Simulation Timeline (48h)</span>
-                <ChevronUp className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
+          {/* Perspective Quick Pill */}
+          <div className="hidden md:flex items-center space-x-1.5 pointer-events-auto bg-surface-low/90 backdrop-blur-xl p-1.5 px-3 rounded-2xl border border-surface-highest text-[10px] font-mono text-tactical-muted">
+            <Compass className="w-3 h-3 text-primary" />
+            <span>PITCH: {is3D ? '60° 3D' : '0° 2D'}</span>
+          </div>
         </div>
-
-        {/* Empty placeholder for balance */}
-        <div className="w-20 hidden md:block"></div>
-      </div>
+      )}
 
     </div>
   );

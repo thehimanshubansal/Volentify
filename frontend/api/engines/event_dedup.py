@@ -1,14 +1,20 @@
 import os
 import json
-import google.generativeai as genai
+try:
+    import google.generativeai as genai
+except ImportError:
+    genai = None
+
 from datetime import datetime
 from typing import List
 from api.models.schemas import RawReportSchema, DeduplicatedEventSchema
 
 # Initialize Gemini if key is available
 gemini_key = os.environ.get("GEMINI_API_KEY")
-if gemini_key:
+if gemini_key and genai:
     genai.configure(api_key=gemini_key)
+
+
 
 class EventDeduplicator:
     

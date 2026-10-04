@@ -41,27 +41,36 @@ enum SourceType {
 }
 
 model User {
-  id            String          @id @default(cuid())
-  name          String
-  email         String          @unique
-  phone         String?
-  passwordHash  String          @default("volentify_secure_hash")
-  role          Role            @default(CITIZEN)
-  stateDistrict String?
-  isVerified    Boolean         @default(false)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
+  id               String          @id @default(cuid())
+  name             String
+  email            String          @unique
+  phone            String          // Mandatory mobile number for emergency CAP broadcast & field dispatch
+  passwordHash     String?         @default("volentify_secure_hash")
+  role             Role            @default(CITIZEN)
+  stateDistrict    String?
+  lat              Float?
+  lng              Float?
+  provider         String          @default("credentials") // "credentials" or "google"
+  googleId         String?         @unique
+  avatarUrl        String?
+  bloodGroup       String?
+  emergencyContact String?
+  isVerified       Boolean         @default(false)
+  onboarded        Boolean         @default(false)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 
-  volunteer     VolunteerProfile?
-  organization  Organization?   @relation(fields: [orgId], references: [id])
-  orgId         String?
-  tasksCreated  Task[]          @relation("CreatedTasks")
-  tasksAssigned Task[]          @relation("AssignedVolunteer")
-  evidencePosts Evidence[]
-  alertsSent    Alert[]         @relation("AlertSender")
+  volunteer        VolunteerProfile?
+  organization     Organization?   @relation(fields: [orgId], references: [id])
+  orgId            String?
+  tasksCreated     Task[]          @relation("CreatedTasks")
+  tasksAssigned    Task[]          @relation("AssignedVolunteer")
+  evidencePosts    Evidence[]
+  alertsSent       Alert[]         @relation("AlertSender")
 
   @@index([role])
   @@index([email])
+  @@index([phone])
 }
 
 model VolunteerProfile {

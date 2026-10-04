@@ -1,0 +1,13 @@
+{
+  "name": "volentify-root",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "dev:frontend": "npm --prefix frontend run dev:next",
+    "dev:backend": "python -m uvicorn backend.main:app --reload --port 8000",
+    "build": "npm --prefix frontend run build",
+    "start": "npm --prefix frontend run start",
+    "lint": "npm --prefix frontend run lint"
+  }
+}

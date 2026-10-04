@@ -5,18 +5,16 @@ import Link from 'next/link';
 import { 
   ShieldAlert, 
   Search, 
-  Filter, 
   MapPin, 
-  Wind, 
-  CloudRain, 
-  Waves, 
   ArrowRight, 
   Map, 
-  Activity,
+  Radio, 
+  RefreshCw,
+  Wind,
+  Waves,
   Flame,
-  Radio,
-  SlidersHorizontal,
-  RefreshCw
+  Zap,
+  ArrowUpRight
 } from 'lucide-react';
 
 interface DisasterRecord {
@@ -82,67 +80,69 @@ export default function DisastersRegistryPage() {
   const severities = ['ALL', 'CRITICAL', 'HIGH', 'MODERATE'];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 font-telemetry">
+    <div className="max-w-7xl mx-auto px-6 py-16 space-y-12">
       
-      {/* Page Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-surface-highest/60 pb-6">
-        <div className="space-y-2">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/20 border border-primary/40 text-primary text-xs font-bold">
+      {/* Editorial Page Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-8 border-b border-white/[0.08]">
+        <div className="space-y-4 max-w-3xl">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-white/[0.04] border border-white/[0.08] font-mono text-xs text-primary backdrop-blur-md">
             <Radio className="w-3.5 h-3.5 animate-pulse" />
             <span>NATIONAL MULTI-HAZARD INCIDENT REGISTRY</span>
           </div>
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-tactical-text">
+          
+          <h1 className="heading-editorial text-4xl sm:text-6xl text-white leading-tight">
             Active Disaster Operations
           </h1>
-          <p className="text-xs sm:text-sm text-tactical-muted font-sans max-w-3xl">
-            Real-time multi-spectral OSINT monitoring, CWC hydrological sensors, and IMD early warning bulletins across all Indian states and coastal sectors.
+          
+          <p className="text-base text-slate-400 font-light leading-relaxed">
+            Multi-spectral satellite observation, CWC hydrological river gauges, and IMD early warning bulletins across all Indian states and coastal sectors.
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 shrink-0">
           <button
             onClick={fetchDisasters}
-            className="p-2.5 rounded-xl bg-surface-low border border-surface-highest text-tactical-text hover:bg-surface-high transition-colors text-xs flex items-center space-x-2"
+            className="px-5 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white font-medium text-xs transition-colors backdrop-blur-md border border-white/[0.08] flex items-center space-x-2"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-primary' : ''}`} />
-            <span className="hidden sm:inline">Refresh Feeds</span>
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-primary' : ''}`} />
+            <span>Refresh Feeds</span>
           </button>
 
           <Link
             href="/map"
-            className="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-tint text-surface-lowest font-bold text-xs transition-colors flex items-center space-x-2 shadow-tactical"
+            className="px-6 py-3 rounded-full bg-primary hover:bg-primary-hover text-slate-950 font-semibold text-xs transition-all flex items-center space-x-2 shadow-lg"
           >
             <Map className="w-4 h-4" />
-            <span>OPEN GIS CANVAS</span>
+            <span>Open GIS Canvas</span>
           </Link>
         </div>
       </div>
 
-      {/* Filter & Search Ribbon */}
-      <div className="p-4 rounded-2xl bg-surface-low border border-surface-highest space-y-4">
-        <div className="flex flex-col md:flex-row gap-3">
+      {/* Filter & Search Bar */}
+      <div className="p-6 rounded-3xl bg-surface-card border border-white/[0.08] shadow-2xl space-y-5 backdrop-blur-xl">
+        <div className="flex flex-col md:flex-row gap-4">
           {/* Search Input */}
           <div className="relative flex-1">
-            <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-primary" />
+            <Search className="absolute left-4 top-3.5 w-4 h-4 text-primary" />
             <input
               type="text"
               placeholder="Search by state (e.g. Odisha, Assam, Kerala), district, or incident name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-surface-lowest border border-surface-highest text-xs text-tactical-text focus:outline-none focus:border-primary font-sans placeholder-tactical-muted"
+              className="w-full pl-11 pr-4 py-3 rounded-full bg-white/[0.03] border border-white/[0.08] text-sm text-white placeholder-slate-500 focus:outline-none focus:border-primary font-sans transition-colors"
             />
           </div>
 
-          {/* Severity Quick Filter Buttons */}
+          {/* Severity Filter Buttons */}
           <div className="flex items-center space-x-2 overflow-x-auto pb-1 md:pb-0">
             {severities.map(sev => (
               <button
                 key={sev}
                 onClick={() => setSelectedSeverity(sev)}
-                className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors ${
+                className={`px-4 py-2 rounded-full text-xs font-medium transition-all ${
                   selectedSeverity === sev
-                    ? sev === 'CRITICAL' ? 'bg-emergency text-white' : 'bg-primary text-surface-lowest'
-                    : 'bg-surface-lowest text-tactical-muted hover:text-white border border-surface-highest'
+                    ? sev === 'CRITICAL' ? 'bg-emergency text-white shadow-md' : 'bg-primary text-slate-950 font-semibold shadow-md'
+                    : 'bg-white/[0.04] text-slate-400 hover:text-white border border-white/[0.08]'
                 }`}
               >
                 {sev}
@@ -152,16 +152,16 @@ export default function DisastersRegistryPage() {
         </div>
 
         {/* Hazard Category Pills */}
-        <div className="flex items-center space-x-2 overflow-x-auto pt-2 border-t border-surface-highest/40">
-          <span className="text-[10px] uppercase font-bold text-tactical-muted mr-2">Category:</span>
+        <div className="flex items-center space-x-2 overflow-x-auto pt-3 border-t border-white/[0.06]">
+          <span className="font-mono text-xs uppercase tracking-widest text-slate-400 mr-2">Category:</span>
           {categories.map(cat => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3 py-1 rounded-full text-xs transition-colors whitespace-nowrap ${
+              className={`px-4 py-1.5 rounded-full text-xs transition-colors whitespace-nowrap ${
                 selectedCategory === cat
-                  ? 'bg-primary/20 text-primary border border-primary/50 font-bold'
-                  : 'text-tactical-muted hover:text-tactical-text hover:bg-surface-high/50'
+                  ? 'bg-primary/20 text-primary border border-primary/50 font-semibold'
+                  : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
               }`}
             >
               {cat}
@@ -171,9 +171,9 @@ export default function DisastersRegistryPage() {
       </div>
 
       {/* Results Count & Metric Bar */}
-      <div className="flex items-center justify-between text-xs text-tactical-muted px-1">
+      <div className="flex items-center justify-between text-xs text-slate-400 px-1 font-mono">
         <span>Showing <strong className="text-primary">{filteredDisasters.length}</strong> active incident nodes</span>
-        <span className="text-[11px]">System 1 Triage by <strong>Laya Multilingual Decision Engine</strong></span>
+        <span className="text-[11px] text-slate-500">System 1 Triage by <strong className="text-slate-400">Laya Multilingual Decision Engine</strong></span>
       </div>
 
       {/* Disaster Cards Grid */}
@@ -183,26 +183,26 @@ export default function DisastersRegistryPage() {
           return (
             <div
               key={disaster.id}
-              className={`p-6 rounded-2xl bg-surface-low border transition-all duration-200 hover:border-primary/60 flex flex-col justify-between space-y-4 shadow-tactical relative overflow-hidden ${
-                isCritical ? 'border-emergency/40' : 'border-surface-highest'
+              className={`p-7 rounded-3xl bg-surface-card border transition-all duration-300 hover:border-white/[0.22] hover:shadow-2xl flex flex-col justify-between space-y-5 relative overflow-hidden ${
+                isCritical ? 'border-emergency/40' : 'border-white/[0.08]'
               }`}
             >
               {/* Top Row: Severity & SubType */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                  <span className={`px-3 py-1 rounded-full font-mono text-[10px] font-bold uppercase tracking-wider ${
                     isCritical ? 'bg-emergency text-white animate-pulse' : 'bg-primary/20 text-primary border border-primary/30'
                   }`}>
                     {disaster.severity}
                   </span>
-                  <span className="text-xs text-tactical-muted">{disaster.subType}</span>
+                  <span className="font-mono text-xs text-slate-400">{disaster.subType}</span>
                 </div>
-                <span className="text-[10px] text-tactical-muted">{disaster.updatedAt}</span>
+                <span className="font-mono text-[10px] text-slate-500">{disaster.updatedAt}</span>
               </div>
 
               {/* Title & Location */}
-              <div className="space-y-1.5">
-                <h3 className="text-base font-bold text-tactical-text line-clamp-2">
+              <div className="space-y-2">
+                <h3 className="font-serif text-2xl text-white font-normal leading-snug line-clamp-2">
                   {disaster.name}
                 </h3>
                 <div className="flex items-center space-x-1.5 text-xs text-primary font-sans">
@@ -212,39 +212,39 @@ export default function DisastersRegistryPage() {
               </div>
 
               {/* Summary */}
-              <p className="text-xs text-tactical-muted line-clamp-3 font-sans leading-relaxed">
+              <p className="text-xs text-slate-400 font-light leading-relaxed line-clamp-3">
                 {disaster.details}
               </p>
 
               {/* Telemetry Metrics Strip */}
-              <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-surface-lowest border border-surface-highest text-[10px]">
+              <div className="grid grid-cols-3 gap-2 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.06] font-mono text-[10px]">
                 <div>
-                  <span className="text-tactical-muted block">AFFECTED POP</span>
-                  <span className="font-bold text-tactical-text">{disaster.affected_pop || '85K'}</span>
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">AFFECTED</span>
+                  <span className="font-bold text-slate-200">{disaster.affected_pop || '85K'}</span>
                 </div>
                 <div>
-                  <span className="text-tactical-muted block">WIND SPEED</span>
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">WIND</span>
                   <span className="font-bold text-primary">{disaster.wind_speed || 45} km/h</span>
                 </div>
                 <div>
-                  <span className="text-tactical-muted block">SURGE / RAIN</span>
-                  <span className="font-bold text-emerald-400">{disaster.surge_m ? `${disaster.surge_m}m surge` : `${disaster.rainfall_mm || 35}mm`}</span>
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">RAIN/SURGE</span>
+                  <span className="font-bold text-emerald-400">{disaster.surge_m ? `${disaster.surge_m}m` : `${disaster.rainfall_mm || 35}mm`}</span>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-2 flex items-center justify-between border-t border-surface-highest/40">
+              <div className="pt-3 flex items-center justify-between border-t border-white/[0.06]">
                 <Link
                   href={`/disasters/${disaster.id}`}
-                  className="text-xs text-primary hover:text-primary-tint font-bold flex items-center space-x-1 transition-colors"
+                  className="text-xs text-primary hover:text-primary-hover font-medium flex items-center space-x-1 transition-colors"
                 >
-                  <span>TACTICAL BRIEFING</span>
+                  <span>Tactical Briefing</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
 
                 <Link
                   href={`/map`}
-                  className="p-1.5 rounded-lg bg-surface-high text-tactical-text hover:text-white transition-colors"
+                  className="p-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white transition-colors"
                   title="View on Map"
                 >
                   <Map className="w-3.5 h-3.5" />

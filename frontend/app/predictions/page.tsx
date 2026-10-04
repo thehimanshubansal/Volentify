@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { 
   LineChart, 
   BrainCircuit, 
@@ -13,7 +14,8 @@ import {
   Wind,
   CloudRain,
   Waves,
-  RefreshCw
+  RefreshCw,
+  Map
 } from 'lucide-react';
 
 const REGION_DATA: Record<string, any> = {
@@ -94,13 +96,11 @@ export default function PredictionsPage() {
   });
   const [isInferring, setIsInferring] = useState(false);
 
-  // Sync sliders when region changes
   useEffect(() => {
     setWindSpeed(data.defaultWind);
     setRainfall(data.defaultRain);
   }, [selectedRegion, data.defaultWind, data.defaultRain]);
 
-  // Live inference trigger
   useEffect(() => {
     let isMounted = true;
     setIsInferring(true);
@@ -124,7 +124,6 @@ export default function PredictionsPage() {
           const result = await res.json();
           if (isMounted) setPrediction(result);
         } else {
-          // Heuristic fallback calculation
           const prob = Math.min(0.98, (windSpeed * 0.004) + (rainfall * 0.002));
           const surge = Math.round(prob * 3.8 * 100) / 100;
           const risk = prob > 0.8 ? 'CRITICAL' : prob > 0.5 ? 'HIGH' : 'MODERATE';
@@ -138,7 +137,6 @@ export default function PredictionsPage() {
           }
         }
       } catch (err) {
-        // Fallback
         const prob = Math.min(0.98, (windSpeed * 0.004) + (rainfall * 0.002));
         const surge = Math.round(prob * 3.8 * 100) / 100;
         const risk = prob > 0.8 ? 'CRITICAL' : prob > 0.5 ? 'HIGH' : 'MODERATE';
@@ -162,41 +160,50 @@ export default function PredictionsPage() {
   }, [windSpeed, rainfall, data]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-6 py-16 space-y-12">
       
-      {/* Header */}
-      <div className="border-b border-surface-highest/60 pb-6 space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 text-xs font-telemetry font-bold">
+      {/* Editorial Page Header */}
+      <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 pb-8 border-b border-white/[0.08]">
+        <div className="space-y-4 max-w-3xl">
+          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-xs text-emerald-400 backdrop-blur-md">
             <BrainCircuit className="w-3.5 h-3.5" />
             <span>MACHINE LEARNING RISK FORECASTING (XGBOOST & DISTILBERT)</span>
           </div>
-          <span className="text-xs font-telemetry text-tactical-muted">
-            MODEL INFERENCE: <strong className="text-primary">{isInferring ? 'COMPUTING...' : 'LIVE 2.0.0'}</strong>
-          </span>
+          
+          <h1 className="heading-editorial text-4xl sm:text-6xl text-white leading-tight">
+            Hazard Probability & Risk Forecast
+          </h1>
+          
+          <p className="text-base text-slate-400 font-light leading-relaxed">
+            Dynamic machine learning risk estimation trained on historical Indian disaster catalogues, CWC hydrographs, and terrain elevation models.
+          </p>
         </div>
-        <h1 className="text-2xl sm:text-4xl font-extrabold text-tactical-text">
-          Hazard Probability & Risk Forecast
-        </h1>
-        <p className="text-xs sm:text-sm text-tactical-muted">
-          Dynamic machine learning risk estimation trained on 50+ years of Indian historical disaster data, meteorological telemetry, and terrain elevation.
-        </p>
+
+        <div className="flex items-center space-x-3 shrink-0">
+          <div className="font-mono text-xs text-slate-400">
+            INFERENCE ENGINE: <span className="text-primary font-semibold">{isInferring ? 'COMPUTING...' : 'ONLINE 2.0'}</span>
+          </div>
+        </div>
       </div>
 
       {/* Main ML Forecast Matrix */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* ML Model Risk Output Cards */}
         <div className="lg:col-span-8 space-y-6">
           
-          <div className="p-6 rounded-2xl glass-panel space-y-5 font-telemetry border-l-4 border-emerald-500">
-            <div className="flex items-center justify-between border-b border-surface-highest pb-3">
+          <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] shadow-2xl space-y-6 transition-all duration-300">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/[0.06] pb-4">
               <div>
-                <span className="text-[10px] text-tactical-muted uppercase font-bold block">MODEL ID: {data.modelId}</span>
-                <h3 className="text-base font-bold text-tactical-text">{data.title}</h3>
+                <span className="font-mono text-[10px] text-slate-500 uppercase tracking-widest block">
+                  MODEL ID: {data.modelId}
+                </span>
+                <h3 className="font-serif text-2xl sm:text-3xl text-white font-normal mt-0.5">
+                  {data.title}
+                </h3>
               </div>
-              <span className={`px-3 py-1 rounded text-white text-xs font-bold ${
-                prediction.risk_level === 'CRITICAL' ? 'bg-emergency animate-pulse' : 'bg-primary'
+              <span className={`px-4 py-1.5 rounded-full font-mono text-xs font-bold self-start sm:self-auto ${
+                prediction.risk_level === 'CRITICAL' ? 'bg-emergency text-white animate-pulse' : 'bg-primary text-slate-950'
               }`}>
                 {prediction.risk_level} RISK ({(prediction.hazard_probability * 100).toFixed(1)}%)
               </span>
@@ -204,49 +211,53 @@ export default function PredictionsPage() {
 
             {/* Dynamic Model Output Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-              <div className="p-3 rounded bg-surface-high border border-surface-highest">
-                <span className="text-[10px] text-tactical-muted block">HAZARD PROBABILITY</span>
-                <span className="text-2xl font-extrabold text-emergency">
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider block">HAZARD PROBABILITY</span>
+                <span className="font-serif text-3xl sm:text-4xl text-emergency block mt-1">
                   {(prediction.hazard_probability * 100).toFixed(1)}%
                 </span>
-                <span className="text-[9px] text-emerald-400 block mt-0.5">XGBoost Classification</span>
+                <span className="font-mono text-[10px] text-emerald-400 block mt-1">XGBoost Classification</span>
               </div>
-              <div className="p-3 rounded bg-surface-high border border-surface-highest">
-                <span className="text-[10px] text-tactical-muted block">ESTIMATED STORM SURGE</span>
-                <span className="text-2xl font-extrabold text-primary">
+
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider block">ESTIMATED SURGE</span>
+                <span className="font-serif text-3xl sm:text-4xl text-primary block mt-1">
                   {prediction.predicted_surge_m} m
                 </span>
-                <span className="text-[9px] text-primary-tint block mt-0.5">Peak Sea Level Rise</span>
+                <span className="font-mono text-[10px] text-slate-400 block mt-1">Peak Water Level</span>
               </div>
-              <div className="p-3 rounded bg-surface-high border border-surface-highest">
-                <span className="text-[10px] text-tactical-muted block">MODEL CONFIDENCE</span>
-                <span className="text-2xl font-extrabold text-emerald-400">
+
+              <div className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
+                <span className="font-mono text-[10px] text-slate-500 uppercase tracking-wider block">MODEL CONFIDENCE</span>
+                <span className="font-serif text-3xl sm:text-4xl text-emerald-400 block mt-1">
                   {(prediction.confidence_score * 100).toFixed(1)}%
                 </span>
-                <span className="text-[9px] text-tactical-muted block mt-0.5">Cross-validated (k=5)</span>
+                <span className="font-mono text-[10px] text-slate-500 block mt-1">Cross-validated (k=5)</span>
               </div>
             </div>
 
-            <p className="text-xs text-tactical-muted leading-relaxed font-sans">
+            <p className="text-sm text-slate-400 font-light leading-relaxed">
               {data.desc}
             </p>
           </div>
 
           {/* Interactive ML Parameter Sandbox */}
-          <div className="p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary flex items-center space-x-2">
-              <Sliders className="w-4 h-4 text-primary" />
-              <span>LIVE INFERENCE PARAMETER SANDBOX (REAL-TIME TEST)</span>
-            </h3>
+          <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] shadow-2xl space-y-6">
+            <div className="flex items-center space-x-2 text-primary">
+              <Sliders className="w-5 h-5 text-primary" />
+              <h3 className="font-mono text-xs uppercase tracking-widest font-semibold">
+                LIVE INFERENCE PARAMETER SANDBOX (REAL-TIME MODEL RUN)
+              </h3>
+            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-              <div className="space-y-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 pt-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-tactical-muted flex items-center space-x-1">
-                    <Wind className="w-3.5 h-3.5 text-primary" />
-                    <span>SUSTAINED WIND SPEED</span>
+                  <span className="text-slate-400 flex items-center space-x-1.5 font-sans">
+                    <Wind className="w-4 h-4 text-primary" />
+                    <span>Sustained Wind Speed</span>
                   </span>
-                  <span className="font-bold text-primary">{windSpeed} KM/H</span>
+                  <span className="font-mono font-bold text-primary text-sm">{windSpeed} KM/H</span>
                 </div>
                 <input
                   type="range"
@@ -255,17 +266,17 @@ export default function PredictionsPage() {
                   step="5"
                   value={windSpeed}
                   onChange={(e) => setWindSpeed(Number(e.target.value))}
-                  className="w-full accent-primary bg-surface-lowest h-2 rounded cursor-pointer"
+                  className="w-full accent-primary bg-white/[0.08] h-2 rounded-full cursor-pointer"
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-tactical-muted flex items-center space-x-1">
-                    <CloudRain className="w-3.5 h-3.5 text-blue-400" />
-                    <span>24H CUMULATIVE RAINFALL</span>
+                  <span className="text-slate-400 flex items-center space-x-1.5 font-sans">
+                    <CloudRain className="w-4 h-4 text-blue-400" />
+                    <span>24H Cumulative Precipitation</span>
                   </span>
-                  <span className="font-bold text-blue-400">{rainfall} MM</span>
+                  <span className="font-mono font-bold text-blue-400 text-sm">{rainfall} MM</span>
                 </div>
                 <input
                   type="range"
@@ -274,25 +285,29 @@ export default function PredictionsPage() {
                   step="10"
                   value={rainfall}
                   onChange={(e) => setRainfall(Number(e.target.value))}
-                  className="w-full accent-blue-500 bg-surface-lowest h-2 rounded cursor-pointer"
+                  className="w-full accent-blue-500 bg-white/[0.08] h-2 rounded-full cursor-pointer"
                 />
               </div>
             </div>
           </div>
 
           {/* DistilBERT Situation Classifier */}
-          <div className="p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-            <div className="flex items-center justify-between border-b border-surface-highest pb-3">
+          <div className="p-8 rounded-3xl bg-surface-card border border-white/[0.08] shadow-2xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-white/[0.06] pb-4">
               <div>
-                <span className="text-[10px] text-tactical-muted uppercase font-bold block">NLP MODEL: DISTILBERT-SITREP</span>
-                <h3 className="text-base font-bold text-tactical-text">Automated Situation Intensity & Needs Classifier</h3>
+                <span className="font-mono text-[10px] text-slate-500 uppercase tracking-widest block">
+                  NLP MODEL: DISTILBERT-SITREP
+                </span>
+                <h3 className="font-serif text-xl sm:text-2xl text-white font-normal mt-0.5">
+                  Automated Situation Intensity & Needs Classifier
+                </h3>
               </div>
-              <span className="px-3 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs font-bold">
+              <span className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs font-semibold self-start sm:self-auto">
                 {data.nlpAcc}
               </span>
             </div>
 
-            <p className="text-xs text-tactical-text leading-relaxed font-sans">
+            <p className="text-sm text-slate-400 font-light leading-relaxed">
               {data.nlpDesc}
             </p>
           </div>
@@ -301,26 +316,38 @@ export default function PredictionsPage() {
 
         {/* Sidebar Controls */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="p-6 rounded-2xl glass-panel space-y-4 font-telemetry">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-primary">SELECT TARGET REGION</h3>
+          <div className="p-7 rounded-3xl bg-surface-card border border-white/[0.08] shadow-2xl space-y-5 backdrop-blur-xl">
+            <h3 className="font-mono text-xs uppercase tracking-widest text-slate-400">
+              SELECT TARGET DISASTER SECTOR
+            </h3>
             
-            <div className="space-y-2 text-xs">
+            <div className="space-y-3">
               {Object.keys(REGION_DATA).map((reg) => (
                 <button
                   key={reg}
                   onClick={() => setSelectedRegion(reg)}
-                  className={`w-full p-3 rounded text-left font-bold transition-all ${
+                  className={`w-full p-4 rounded-2xl text-left transition-all ${
                     selectedRegion === reg
-                      ? 'bg-primary text-surface-lowest shadow-tactical'
-                      : 'bg-surface-high hover:bg-surface-highest text-tactical-text'
+                      ? 'bg-primary text-slate-950 font-semibold shadow-lg'
+                      : 'bg-white/[0.02] border border-white/[0.08] text-slate-300 hover:text-white hover:bg-white/[0.05]'
                   }`}
                 >
-                  <div className="font-bold">{reg.replace('_', ' ')}</div>
-                  <div className={`text-[10px] ${selectedRegion === reg ? 'text-surface-lowest opacity-90' : 'text-tactical-muted'}`}>
+                  <div className="text-sm font-semibold">{reg.replace('_', ' ')}</div>
+                  <div className={`text-xs mt-0.5 font-light ${selectedRegion === reg ? 'text-slate-900 font-normal' : 'text-slate-500'}`}>
                     {REGION_DATA[reg].district}, {REGION_DATA[reg].state}
                   </div>
                 </button>
               ))}
+            </div>
+
+            <div className="pt-4 border-t border-white/[0.06]">
+              <Link
+                href="/map"
+                className="w-full py-3.5 rounded-full bg-white/10 hover:bg-white/15 text-white font-semibold text-xs transition-colors flex items-center justify-center space-x-2"
+              >
+                <Map className="w-4 h-4 text-primary" />
+                <span>Inspect Region on GIS Map</span>
+              </Link>
             </div>
           </div>
         </div>

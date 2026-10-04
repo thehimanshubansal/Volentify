@@ -11,13 +11,15 @@ import {
   Home, 
   Users, 
   Check, 
-  ShieldAlert,
-  Sparkles,
-  Map as MapIcon,
-  Globe,
-  Mountain,
-  Moon,
-  X
+  ShieldAlert, 
+  Sparkles, 
+  Map as MapIcon, 
+  Globe, 
+  Mountain, 
+  Moon, 
+  Boxes,
+  Compass,
+  X 
 } from 'lucide-react';
 
 interface MapLayerSelectorProps {
@@ -27,23 +29,27 @@ interface MapLayerSelectorProps {
   setSelectedBasemap: (basemap: 'voyager' | 'satellite' | 'dark' | 'topo') => void;
   isOpen: boolean;
   onClose: () => void;
+  is3D: boolean;
+  onToggle3D: () => void;
 }
 
 export default function MapLayerSelector({ 
   activeLayers, 
   setActiveLayers, 
-  selectedBasemap,
-  setSelectedBasemap,
+  selectedBasemap, 
+  setSelectedBasemap, 
   isOpen, 
-  onClose 
+  onClose,
+  is3D,
+  onToggle3D
 }: MapLayerSelectorProps) {
   if (!isOpen) return null;
 
   const basemaps = [
-    { key: 'voyager', label: 'Real Map (Detailed)', desc: 'Streets, topography & rivers', icon: MapIcon },
-    { key: 'satellite', label: 'Satellite HD', desc: 'Real Earth imagery by Esri', icon: Globe },
-    { key: 'dark', label: 'Dark Tactical', desc: 'High-contrast night operations', icon: Moon },
-    { key: 'topo', label: 'Topographic', desc: 'Physical relief & elevation', icon: Mountain },
+    { key: 'voyager', label: 'Real Street Map', desc: 'Esri global roads, cities & borders', icon: MapIcon },
+    { key: 'satellite', label: 'Satellite HD', desc: 'Esri World Imagery satellite view', icon: Globe },
+    { key: 'dark', label: 'Dark Tactical', desc: 'Esri Dark Canvas night operations', icon: Moon },
+    { key: 'topo', label: 'Topographic', desc: 'Physical relief & elevation contours', icon: Mountain },
   ];
 
   const layerOptions = [
@@ -51,10 +57,10 @@ export default function MapLayerSelector({
     { key: 'hazardZones', label: 'Tactical Hazard Buffer Zones', icon: Waves, badge: 'ACTIVE' },
     { key: 'disasters', label: 'Disaster Tactical Glyphs', icon: ShieldAlert, badge: null },
     { key: 'volunteers', label: 'Active Field Volunteers', icon: Users, badge: null },
+    { key: 'hospitals', label: 'Emergency Trauma Hospitals', icon: Hospital, badge: 'MEDICAL' },
+    { key: 'shelters', label: 'Relief Shelters & Camps', icon: Home, badge: 'LOGISTICS' },
     { key: 'weatherRadar', label: 'Doppler Weather Radar (RainViewer)', icon: CloudRain, badge: 'RADAR' },
-    { key: 'cyclone', label: 'Cyclone Track & Wind Vector', icon: Wind, badge: null },
-    { key: 'hospitals', label: 'Emergency Trauma Hospitals', icon: Hospital, badge: null },
-    { key: 'shelters', label: 'Relief Shelters & Camps', icon: Home, badge: null },
+    { key: 'buildings3D', label: '3D Tactical Building Extrusions', icon: Boxes, badge: '3D MESH' },
   ];
 
   const toggleLayer = (key: string) => {
@@ -65,7 +71,7 @@ export default function MapLayerSelector({
   };
 
   return (
-    <div className="absolute top-16 right-4 z-40 w-84 bg-surface-low/98 backdrop-blur-2xl p-4 rounded-2xl border border-surface-highest shadow-2xl space-y-4 font-telemetry animate-in fade-in-50 zoom-in-95 duration-200">
+    <div className="absolute top-16 right-4 z-40 w-84 sm:w-92 bg-surface-low/98 backdrop-blur-2xl p-4 rounded-2xl border border-surface-highest shadow-2xl space-y-4 font-telemetry animate-in fade-in-50 zoom-in-95 duration-200">
       <div className="flex items-center justify-between border-b border-surface-highest/80 pb-2.5">
         <div className="flex items-center space-x-1.5">
           <Sparkles className="w-4 h-4 text-primary" />
@@ -78,6 +84,29 @@ export default function MapLayerSelector({
           className="p-1 rounded-lg text-tactical-muted hover:text-tactical-text hover:bg-surface-high transition-colors"
         >
           <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* 2D / 3D Quick View Toggle */}
+      <div className="bg-surface-high/40 p-2 rounded-xl border border-surface-highest/80 flex items-center justify-between">
+        <div>
+          <span className="text-[10px] font-bold text-tactical-muted uppercase tracking-wider block">
+            PERSPECTIVE PROJECTION
+          </span>
+          <span className="text-xs font-bold text-tactical-text">
+            {is3D ? '3D Isometric Tactical (60° Tilt)' : '2D Top-Down Orthographic (0° Flat)'}
+          </span>
+        </div>
+        <button
+          onClick={onToggle3D}
+          className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition-all ${
+            is3D 
+              ? 'bg-primary text-surface-lowest shadow-sm' 
+              : 'bg-surface-highest text-tactical-muted hover:text-tactical-text'
+          }`}
+        >
+          <Compass className="w-3.5 h-3.5" />
+          <span>{is3D ? 'Switch to 2D' : 'Switch to 3D'}</span>
         </button>
       </div>
 
@@ -116,7 +145,7 @@ export default function MapLayerSelector({
         <span className="text-[10px] font-bold text-tactical-muted uppercase tracking-wider block mb-2">
           TACTICAL DATA LAYERS
         </span>
-        <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+        <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
           {layerOptions.map((item) => {
             const Icon = item.icon;
             const isEnabled = activeLayers[item.key];
