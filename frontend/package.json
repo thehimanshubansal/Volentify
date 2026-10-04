@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "concurrently \"next dev\" \"python -m uvicorn api.index:app --reload --port 8000\"",
     "dev:next": "next dev -p 3000",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
