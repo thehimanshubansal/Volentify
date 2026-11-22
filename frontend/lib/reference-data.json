@@ -1,0 +1,454 @@
+{
+  "papers": [
+    {
+      "title": "Sendai Framework for Disaster Risk Reduction 2015–2030",
+      "authors": "United Nations Office for Disaster Risk Reduction (UNDRR)",
+      "year": 2015,
+      "venue": "UNDRR (adopted by UN Member States at the Third UN World Conference on Disaster Risk Reduction, Sendai, 18 March 2015)",
+      "url": "https://www.undrr.org/publication/sendai-framework-disaster-risk-reduction-2015-2030",
+      "topic": "Policy & law",
+      "why": "The global framework India's National Disaster Management Plan is built on; its seven targets and four priorities give users a shared vocabulary for risk reduction."
+    },
+    {
+      "title": "Public warning in the networked age: open standards to the rescue?",
+      "authors": "Botterell A, Addams-Moring R",
+      "year": 2007,
+      "venue": "Communications of the ACM, 50",
+      "url": "https://doi.org/10.1145/1226736.1226767",
+      "topic": "Early warning",
+      "why": "Explains why open standards such as the Common Alerting Protocol matter, the same format behind NDMA's SACHET alerts that Volentify reads."
+    },
+    {
+      "title": "Modelling Disaster Impact for the Global Disaster Alert and Coordination System",
+      "authors": "De Groeve T, Vernaccini L, Annunziato A",
+      "year": 2006,
+      "venue": "Proceedings of the 3rd International ISCRAM Conference (Newark, NJ, USA)",
+      "url": "https://www.idl.iscram.org/files/degroeve/2006/429_DeGroeve_etal2006.pdf",
+      "topic": "Early warning",
+      "why": "Describes how GDACS turns raw hazard data into impact-based alert levels, which helps users read the GDACS colour levels shown in Volentify's hazard feed."
+    },
+    {
+      "title": "Evacuation ahead of natural disasters: Evidence from cyclone Phailin in India and typhoon Haiyan in the Philippines",
+      "authors": "Walch C",
+      "year": 2018,
+      "venue": "Geo: Geography and Environment, 5",
+      "url": "https://doi.org/10.1002/geo2.51",
+      "topic": "Early warning",
+      "why": "Compares why Odisha's pre-emptive evacuation for Phailin worked, with lessons for turning a warning into people actually moving."
+    },
+    {
+      "title": "Politics of cyclone evacuation: successful handling of Fani in Odisha, India",
+      "authors": "Dash B, Satpathy S, Akhter S",
+      "year": 2025,
+      "venue": "Disaster Prevention and Management: An International Journal, 34(5)",
+      "url": "https://doi.org/10.1108/DPM-06-2024-0137",
+      "topic": "Early warning",
+      "why": "Examines the institutional and political factors behind Odisha's large-scale Fani evacuation, the model most Indian cyclone responses now follow."
+    },
+    {
+      "title": "The serval mesh: A platform for resilient communications in disaster & crisis",
+      "authors": "Gardner-Stephen P, Challans R, Lakeman J et al.",
+      "year": 2013,
+      "venue": "2013 IEEE Global Humanitarian Technology Conference (GHTC)",
+      "url": "https://doi.org/10.1109/GHTC.2013.6713674",
+      "topic": "Offline & mesh communication",
+      "why": "A foundational design for phone-to-phone messaging when cell networks fail, the same problem Volentify Mesh addresses."
+    },
+    {
+      "title": "TeamPhone: Networking SmartPhones for Disaster Recovery",
+      "authors": "Lu Z, Cao G, La Porta T",
+      "year": 2017,
+      "venue": "IEEE Transactions on Mobile Computing, 16",
+      "url": "https://doi.org/10.1109/TMC.2017.2695452",
+      "topic": "Offline & mesh communication",
+      "why": "Shows how ordinary smartphones can form ad hoc networks for rescue teams and survivors without infrastructure, including the energy trade-offs involved."
+    },
+    {
+      "title": "Bluetooth Low Energy Mesh Networks: A Survey",
+      "authors": "Darroudi SM, Gomez C",
+      "year": 2017,
+      "venue": "Sensors, 17",
+      "url": "https://doi.org/10.3390/s17071467",
+      "topic": "Offline & mesh communication",
+      "why": "Reviews BLE mesh approaches (flooding vs routing) and their limits on range, latency and battery, which shape what offline field reports can carry."
+    },
+    {
+      "title": "Processing Social Media Messages in Mass Emergency: A Survey",
+      "authors": "Imran M, Castillo C, Diaz F, Vieweg S",
+      "year": 2015,
+      "venue": "ACM Computing Surveys, 47(4)",
+      "url": "https://doi.org/10.1145/2771588",
+      "topic": "Crisis informatics",
+      "why": "The standard survey on filtering, classifying and summarising crowd-sourced crisis messages, relevant to triaging incoming field reports."
+    },
+    {
+      "title": "Social sensing of flood impacts in India: A case study of Kerala 2018",
+      "authors": "Young JC, Arthur R, Spruce M, Williams HTP",
+      "year": 2022,
+      "venue": "International Journal of Disaster Risk Reduction, 74",
+      "url": "https://doi.org/10.1016/j.ijdrr.2022.102908",
+      "topic": "Crisis informatics",
+      "why": "Tests how well social media signals tracked real flood impacts during the 2018 Kerala floods, and where they fell short."
+    },
+    {
+      "title": "\"Voluntweeters\": self-organizing by digital volunteers in times of crisis",
+      "authors": "Starbird K, Palen L",
+      "year": 2011,
+      "venue": "Proceedings of the SIGCHI Conference on Human Factors in Computing Systems (CHI '11)",
+      "url": "https://doi.org/10.1145/1978942.1979102",
+      "topic": "Volunteer coordination",
+      "why": "Documents how digital volunteers organise themselves in a crisis, which can guide how Volentify structures volunteer roles and handoffs."
+    },
+    {
+      "title": "A review of informal volunteerism in emergencies and disasters: Definition, opportunities and challenges",
+      "authors": "Whittaker J, McLennan B, Handmer J",
+      "year": 2015,
+      "venue": "International Journal of Disaster Risk Reduction, 13",
+      "url": "https://doi.org/10.1016/j.ijdrr.2015.07.010",
+      "topic": "Volunteer coordination",
+      "why": "Defines spontaneous and emergent volunteering and the risks of ignoring it, which matters for any platform that dispatches unaffiliated volunteers."
+    },
+    {
+      "title": "An optimization model for volunteer assignments in humanitarian organizations",
+      "authors": "Falasca M, Zobel CW",
+      "year": 2012,
+      "venue": "Socio-Economic Planning Sciences",
+      "url": "https://doi.org/10.1016/j.seps.2012.07.003",
+      "topic": "Volunteer coordination",
+      "why": "Formalises matching volunteers to tasks while respecting their preferences, a basis for dispatch logic that keeps volunteers engaged."
+    },
+    {
+      "title": "The International Best Track Archive for Climate Stewardship (IBTrACS): Unifying Tropical Cyclone Data",
+      "authors": "Knapp KR, Kruk MC, Levinson DH et al.",
+      "year": 2010,
+      "venue": "Bulletin of the American Meteorological Society, 91(3), 363–376",
+      "url": "https://doi.org/10.1175/2009BAMS2755.1",
+      "topic": "Forecasting & data",
+      "why": "The reference paper for IBTrACS, the best-track dataset Volentify's cyclone model is trained on; cite it when presenting forecasts."
+    },
+    {
+      "title": "XGBoost: A Scalable Tree Boosting System",
+      "authors": "Chen T, Guestrin C",
+      "year": 2016,
+      "venue": "Proceedings of the 22nd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining (KDD '16)",
+      "url": "https://doi.org/10.1145/2939672.2939785",
+      "topic": "Forecasting & data",
+      "why": "Describes the gradient-boosting algorithm behind Volentify's cyclone forecasts, useful for explaining what the model can and cannot do."
+    },
+    {
+      "title": "Storm surge modelling for the Bay of Bengal and Arabian Sea",
+      "authors": "Dube SK, Jain I, Rao AD, Murty TS",
+      "year": 2009,
+      "venue": "Natural Hazards, 51",
+      "url": "https://doi.org/10.1007/s11069-009-9397-9",
+      "topic": "Forecasting & data",
+      "why": "Explains why storm surge, not wind, has caused most cyclone deaths on India's east coast, and how surge is modelled."
+    }
+  ],
+  "guidelines": [
+    {
+      "title": "The Disaster Management Act, 2005 (Act No. 53 of 2005)",
+      "publisher": "Government of India (Legislative Department, via India Code)",
+      "year": 2005,
+      "url": "https://www.indiacode.nic.in/bitstream/123456789/2045/1/A200553.pdf",
+      "why": "The legal basis for NDMA, SDMAs and DDMAs and for disaster plans at every level; the India Code copy includes later amendments."
+    },
+    {
+      "title": "National Disaster Management Plan (NDMP) 2019",
+      "publisher": "NDMA",
+      "year": 2019,
+      "url": "https://ndma.gov.in/sites/default/files/PDF/ndmp-2019.pdf",
+      "why": "India's national plan, aligned to the Sendai Framework, setting out who is responsible for what across hazards and disaster phases."
+    },
+    {
+      "title": "NDMA Guidelines (index of all national guidelines)",
+      "publisher": "NDMA",
+      "year": null,
+      "url": "https://www.ndma.gov.in/Governance/Guidelines",
+      "why": "The official list of hazard-specific and thematic NDMA guidelines, which should be checked for the latest versions."
+    },
+    {
+      "title": "National Disaster Management Guidelines: Management of Cyclones",
+      "publisher": "NDMA",
+      "year": 2008,
+      "url": "https://sdma.goa.gov.in/sites/default/files/2022-05/cyclones.pdf",
+      "why": "Sets national norms for cyclone early warning, communication, shelters and evacuation along India's coasts."
+    },
+    {
+      "title": "National Disaster Management Guidelines: Management of Floods",
+      "publisher": "NDMA",
+      "year": 2008,
+      "url": "https://sdma.goa.gov.in/sites/default/files/2022-05/flood.pdf",
+      "why": "Covers flood forecasting, warning dissemination and response roles, which applies to most of the past events in this dataset."
+    },
+    {
+      "title": "National Disaster Management Guidelines: Management of Earthquakes",
+      "publisher": "NDMA",
+      "year": 2007,
+      "url": "https://sdma.goa.gov.in/sites/default/files/2022-05/earthquakes.pdf",
+      "why": "The national reference for earthquake preparedness and response, relevant when Volentify surfaces USGS quake events in India."
+    },
+    {
+      "title": "SACHET – National Disaster Alert Portal (CAP-based Integrated Alert System)",
+      "publisher": "NDMA (developed and maintained by C-DOT)",
+      "year": null,
+      "url": "https://sachet.ndma.gov.in/",
+      "why": "India's official source of location-targeted CAP warnings from IMD, CWC, INCOIS and all state/UT disaster management authorities, also published as a CAP RSS feed."
+    },
+    {
+      "title": "Common Alerting Protocol Version 1.2 (OASIS Standard)",
+      "publisher": "OASIS",
+      "year": 2010,
+      "url": "https://docs.oasis-open.org/emergency/cap/v1.2/CAP-v1.2-os.html",
+      "why": "The message format SACHET alerts use; required reading for parsing, storing and re-displaying official warnings correctly."
+    },
+    {
+      "title": "The Sphere Handbook: Humanitarian Charter and Minimum Standards in Humanitarian Response (4th edition)",
+      "publisher": "Sphere",
+      "year": 2018,
+      "url": "https://spherestandards.org/handbook/",
+      "why": "Minimum standards for water, shelter, food and health in relief, which volunteers can use to judge whether needs are being met."
+    },
+    {
+      "title": "The Right to Information Act, 2005 (Act No. 22 of 2005)",
+      "publisher": "Government of India (via India Code)",
+      "year": 2005,
+      "url": "https://indiacode.nic.in/handle/123456789/2065",
+      "why": "Section 4 requires public authorities to proactively disclose information, the basis for the transparency practices listed below."
+    },
+    {
+      "title": "The Digital Personal Data Protection Act, 2023 (Act No. 22 of 2023)",
+      "publisher": "MeitY",
+      "year": 2023,
+      "url": "https://www.meity.gov.in/static/uploads/2024/06/2bf1f0e9f04e6fb4f8fef35e82c42aa5.pdf",
+      "why": "Governs how Volentify may collect and process volunteers' and reporters' personal data (names, phone numbers, locations)."
+    },
+    {
+      "title": "CERT-In Directions under Section 70B(6) of the IT Act, 2000 relating to information security practices and reporting of cyber incidents (No. 20(3)/2022-CERT-In)",
+      "publisher": "CERT-In, MeitY",
+      "year": 2022,
+      "url": "https://www.cert-in.org.in/PDF/CERT-In_Directions_70B_28.04.2022.pdf",
+      "why": "Dated 28 April 2022; requires covered entities to report listed cyber incidents within 6 hours and keep ICT logs for a rolling 180 days within India."
+    }
+  ],
+  "past_disasters": [
+    {
+      "name": "Uttarakhand flash floods (Kedarnath)",
+      "category": "Flood",
+      "start": "2013-06-16",
+      "end": null,
+      "states": ["Uttarakhand"],
+      "deaths": 169,
+      "deaths_note": "Range 169–~5,000. NIDM's 2014 report (as cited by Factly) records 169 confirmed deaths and 4,021 missing. The missing were later presumed dead, putting the total at around 5,000. 169 counts confirmed deaths only.",
+      "affected": null,
+      "source": "Factly (citing NIDM 2014 report)",
+      "source_url": "https://factly.in/the-death-toll-of-2013-uttarakhand-floods-stands-around-5000-not-25000"
+    },
+    {
+      "name": "Cyclone Phailin",
+      "category": "Cyclone",
+      "start": "2013-10-12",
+      "end": null,
+      "states": ["Odisha", "Andhra Pradesh"],
+      "deaths": 38,
+      "deaths_note": "Range 38–47. World Bank (17 Oct 2013) gives an official toll of 38 at 72 hours after landfall near Gopalpur. IFRC (21 Aug 2014, via ReliefWeb) later reported 47 dead.",
+      "affected": "13.23 million people affected (IFRC); close to 1 million evacuated (~8.5 lakh in Odisha, ~1.5 lakh in Andhra Pradesh)",
+      "source": "World Bank",
+      "source_url": "https://www.worldbank.org/en/news/feature/2013/10/17/india-cyclone-phailin-destruction-preparation"
+    },
+    {
+      "name": "Cyclone Hudhud",
+      "category": "Cyclone",
+      "start": "2014-10-12",
+      "end": null,
+      "states": ["Andhra Pradesh", "Odisha"],
+      "deaths": 46,
+      "deaths_note": "46 deaths in Andhra Pradesh per the AP State Disaster Management Department (PTI, 20 Oct 2014): Visakhapatnam 29, Vizianagaram 15, Srikakulam 2. Odisha deaths are not included.",
+      "affected": "Visakhapatnam, Vizianagaram and Srikakulam districts worst hit",
+      "source": "Business Standard / PTI (citing AP State Disaster Management Department)",
+      "source_url": "https://www.business-standard.com/article/pti-stories/cyclone-hudhud-death-toll-rises-to-46-114102001065_1.html"
+    },
+    {
+      "name": "Jammu and Kashmir floods",
+      "category": "Flood",
+      "start": "2014-09-02",
+      "end": null,
+      "states": ["Jammu and Kashmir"],
+      "deaths": 300,
+      "deaths_note": "Range 280–300. 300 dead and 25 injured per the J&K Minister for Relief and Rehabilitation in the Legislative Council (Mar 2015). The Joint Needs Assessment (ReliefWeb) reported 280 as of 21 Sep 2014.",
+      "affected": "450 villages flooded with an estimated rural population of 8.23 lakh (Joint Needs Assessment, preliminary)",
+      "source": "Kashmir Life (J&K Government statement); ReliefWeb Joint Needs Assessment",
+      "source_url": "https://kashmirlife.net/300-people-die-in-last-year-floods-govt-75456/"
+    },
+    {
+      "name": "Tamil Nadu floods incl. Chennai (Northeast monsoon 2015)",
+      "category": "Flood",
+      "start": "2015-10-28",
+      "end": "2015-12-31",
+      "states": ["Tamil Nadu"],
+      "deaths": 470,
+      "deaths_note": "470 rain-related deaths between 28 Oct and 31 Dec 2015 per Tamil Nadu CM J. Jayalalithaa (PTI, Jan 2016), plus 49 deaths on 1–27 Oct 2015. Dates are the period the official count covers.",
+      "affected": "Chennai, Kancheepuram, Tiruvallur, Cuddalore, Thoothukudi and Tirunelveli districts",
+      "source": "Business Standard / PTI (Tamil Nadu CM statement)",
+      "source_url": "https://www.business-standard.com/article/pti-stories/ne-monsoon-claimed-470-lives-in-tn-jaya-116010400394_1.html"
+    },
+    {
+      "name": "Kerala floods and landslides",
+      "category": "Flood",
+      "start": "2018-06-01",
+      "end": "2018-08-18",
+      "states": ["Kerala"],
+      "deaths": 433,
+      "deaths_note": "433 deaths for 1 June–18 Aug 2018 per the Kerala Post-Disaster Needs Assessment (UNDP publication page).",
+      "affected": "54 lakh people affected; 14 lakh displaced; 341 landslides in 10 districts",
+      "source": "UNDP – Post-Disaster Needs Assessment, Kerala",
+      "source_url": "https://www.undp.org/publications/post-disaster-needs-assessment-kerala"
+    },
+    {
+      "name": "Cyclone Fani",
+      "category": "Cyclone",
+      "start": "2019-05-03",
+      "end": null,
+      "states": ["Odisha", "Andhra Pradesh", "West Bengal"],
+      "deaths": 64,
+      "deaths_note": "64 deaths in Odisha per MoS Home Nityanand Rai's written reply in the Lok Sabha. Andhra Pradesh and West Bengal reported no deaths. IMD put the start of landfall near Puri at 0800 IST on 3 May 2019.",
+      "affected": "15.57 lakh people evacuated in Odisha; 5.56 lakh houses/huts damaged in Odisha",
+      "source": "Deccan Herald (MHA written reply, Lok Sabha)",
+      "source_url": "https://www.deccanherald.com/india/64-died-14l-hectare-crop-area-affected-due-to-fani-742640.html"
+    },
+    {
+      "name": "Cyclone Amphan",
+      "category": "Cyclone",
+      "start": "2020-05-20",
+      "end": null,
+      "states": ["West Bengal", "Odisha"],
+      "deaths": 99,
+      "deaths_note": "Range 90–99. Provisional MHA figures (Lok Sabha Unstarred Q.455, 15 Sep 2020): West Bengal 99, Odisha 0. The IFRC DREF final report cites at least 86 in West Bengal and 4 in Odisha.",
+      "affected": "8.13 lakh evacuated in West Bengal and 2.37 lakh in Odisha with NDRF help; 5.52 lakh houses damaged in West Bengal",
+      "source": "MHA reply, Lok Sabha Unstarred Question 455 (15 Sep 2020)",
+      "source_url": "https://eparlib.nic.in/bitstream/123456789/968412/1/AU455.pdf"
+    },
+    {
+      "name": "Cyclone Tauktae",
+      "category": "Cyclone",
+      "start": "2021-05-17",
+      "end": null,
+      "states": ["Gujarat", "Maharashtra", "Goa", "Karnataka", "Kerala", "Dadra and Nagar Haveli and Daman and Diu"],
+      "deaths": 110,
+      "deaths_note": "110 is the sum of provisional state figures in MHA's reply (Lok Sabha Unstarred Q.390, 20 Jul 2021): Gujarat 67, Maharashtra 22, Kerala 11, Karnataka 6, Goa 3, DNH&DD 1. Offshore deaths from the sinking of ONGC-deployed vessels such as barge P305 (the Centre reported 86) were reported separately and may not be included.",
+      "affected": "2.39 lakh people evacuated in Gujarat; 88,910 houses damaged in Gujarat",
+      "source": "MHA reply, Lok Sabha Unstarred Question 390 (20 Jul 2021)",
+      "source_url": "https://eparlib.nic.in/bitstream/123456789/944788/1/AU390.pdf"
+    },
+    {
+      "name": "Cyclone Yaas",
+      "category": "Cyclone",
+      "start": "2021-05-26",
+      "end": null,
+      "states": ["Odisha", "West Bengal", "Jharkhand"],
+      "deaths": 7,
+      "deaths_note": "Provisional MHA figures (Lok Sabha Unstarred Q.390, 20 Jul 2021): Odisha 3, Jharkhand 4. No figure was reported for West Bengal.",
+      "affected": "About 22.2 lakh evacuated (Odisha 7.03 lakh, West Bengal 15.05 lakh, Jharkhand 17,165); about 3 lakh houses damaged in West Bengal",
+      "source": "MHA reply, Lok Sabha Unstarred Question 390 (20 Jul 2021)",
+      "source_url": "https://eparlib.nic.in/bitstream/123456789/944788/1/AU390.pdf"
+    },
+    {
+      "name": "Assam floods and landslides 2022",
+      "category": "Flood",
+      "start": "2022-04-06",
+      "end": null,
+      "states": ["Assam"],
+      "deaths": 179,
+      "deaths_note": "Range 179–181. NDRF reports 179 deaths from floods and landslides in the season from 6 April 2022. ASDMA data (reported by GuwahatiPlus) gives 181 flood deaths for 2022.",
+      "affected": "Over 88 lakh people affected (ASDMA data, as reported by GuwahatiPlus)",
+      "source": "NDRF (Government of India)",
+      "source_url": "https://ndrf.gov.in/en/node/89762"
+    },
+    {
+      "name": "Cyclone Biparjoy",
+      "category": "Cyclone",
+      "start": "2023-06-15",
+      "end": null,
+      "states": ["Gujarat"],
+      "deaths": 0,
+      "deaths_note": "Government of India data reported zero casualties (and 707 births) in Gujarat during Biparjoy. IMD said landfall began around 6:30 pm on 15 June 2023 along the Saurashtra-Kutch coast near Jakhau.",
+      "affected": "Over 1 lakh people evacuated and sheltered along the Gujarat coast",
+      "source": "The Tribune (citing Government of India data)",
+      "source_url": "https://www.tribuneindia.com/news/nation/707-births-zero-casualty-during-cyclone-biparjoy-in-gujarat-518234"
+    },
+    {
+      "name": "Sikkim glacial lake outburst flood (South Lhonak Lake / Teesta)",
+      "category": "GLOF",
+      "start": "2023-10-04",
+      "end": null,
+      "states": ["Sikkim", "West Bengal"],
+      "deaths": 30,
+      "deaths_note": "Snapshot only: 30 dead (including 9 Army personnel) and 81 missing per SSDMA as reported by News On AIR on 7 Oct 2023. Later media reports gave higher tolls. No final official toll was verified.",
+      "affected": "2,563 rescued; 7,025 people in relief camps; 1,320 houses severely damaged (as of 7 Oct 2023)",
+      "source": "News On AIR (citing Sikkim SDMA)",
+      "source_url": "https://newsonair.gov.in/sikkim-floods-death-toll-rises-to-30-including-09-indian-army-personnel-with-81-missing-in-glacial-lhonak-lake-outburst"
+    },
+    {
+      "name": "Wayanad landslides (Mundakkai–Chooralmala)",
+      "category": "Landslide",
+      "start": "2024-07-30",
+      "end": null,
+      "states": ["Kerala"],
+      "deaths": 298,
+      "deaths_note": "298 deaths, including 32 missing persons declared deceased, per MoS Home Nityanand Rai's written reply in the Lok Sabha (reported 1 Apr 2025).",
+      "affected": "Large parts of Punchirimattom, Chooralmala and Mundakkai villages destroyed",
+      "source": "ThePrint / PTI (MHA written reply, Lok Sabha)",
+      "source_url": "https://theprint.in/india/298-persons-killed-in-wayanad-landslides-govt-tells-parliament/2574159"
+    },
+    {
+      "name": "Cyclone Fengal",
+      "category": "Cyclone",
+      "start": "2024-11-30",
+      "end": null,
+      "states": ["Tamil Nadu", "Puducherry", "Andhra Pradesh"],
+      "deaths": 20,
+      "deaths_note": "MHA report: 20 deaths in Tamil Nadu (11 floods, 7 landslides, 2 wall collapse/electrocution). The source gives no death figures for Puducherry or Andhra Pradesh. Landfall was on 30 Nov 2024 between Karaikal and Mahabalipuram (IMD, via Down To Earth).",
+      "affected": "Over 2 lakh people in 14 Tamil Nadu districts; 2.85 lakh in Puducherry",
+      "source": "DT Next (MHA report)",
+      "source_url": "https://www.dtnext.in/amp/story/news/tamilnadu/ministry-of-home-affairs-releases-detailed-report-on-cyclone-fengal-20-reported-dead-813868"
+    },
+    {
+      "name": "Cyclone Dana",
+      "category": "Cyclone",
+      "start": "2024-10-25",
+      "end": null,
+      "states": ["Odisha", "West Bengal"],
+      "deaths": 2,
+      "deaths_note": "UNICEF reports no deaths in Odisha and 2 in West Bengal. Landfall was shortly after midnight on 25 Oct 2024 between Bhitarkanika and Dhamra.",
+      "affected": "82,000 evacuated and 42,000 affected in South 24 Parganas, West Bengal",
+      "source": "ReliefWeb – UNICEF India Flash Update No. 2",
+      "source_url": "https://reliefweb.int/report/india/unicef-india-flash-update-no-2-cyclone-dana-reporting-period-28-oct-2024"
+    },
+    {
+      "name": "Punjab floods 2025",
+      "category": "Flood",
+      "start": "2025-08-01",
+      "end": null,
+      "states": ["Punjab"],
+      "deaths": 56,
+      "deaths_note": "56 dead and 4 missing per the Punjab government's official media bulletin of 16 Sep 2025 (reported by Babushahi). The count runs from 1 August 2025.",
+      "affected": "Over 3.89 lakh people in 2,483 villages across 23 districts",
+      "source": "Babushahi (Punjab official media bulletin, 16 Sep 2025)",
+      "source_url": "https://www.babushahi.com/full-news.php?id=210817"
+    }
+  ],
+  "transparency_practices": [
+    "Publish who is responsible for what: the organisation, functions and duties of each body involved in a response, the powers of the officers who order evacuations or relief, and a directory of officers, control rooms and Public Information Officers (RTI Act 2005, s.4(1)(b)(i)–(ii), (ix), (xvi)).",
+    "Publish the procedures and norms for issuing warnings, evacuation orders and volunteer dispatch, including supervision and escalation channels (RTI Act s.4(1)(b)(iii)–(iv)).",
+    "Publish SOPs, manuals and the disaster management plans prepared under the Disaster Management Act 2005, so citizens and volunteers can check what was promised (RTI Act s.4(1)(b)(v)).",
+    "Publish disaster budgets, fund releases and relief disbursement amounts by district (RTI Act s.4(1)(b)(xi)–(xii)). Publish beneficiary data at a level that does not expose individuals' personal data under the DPDP Act 2023.",
+    "Publish electronically held information as open, machine-readable data at regular intervals: alert archives, damage assessments, shelter lists and response logs (RTI Act s.4(1)(b)(xiv) and s.4(2)).",
+    "Share information in local languages through the most effective local channels, such as SMS, radio, notice boards and the internet (RTI Act s.4(3)–(4)). SACHET already supports 12 regional languages.",
+    "Give reasons for decisions that affect the public, such as why an area was or was not evacuated or why a relief request was declined, and publish all relevant facts when announcing major decisions (RTI Act s.4(1)(c)–(d)).",
+    "Show the provenance of every alert: issuing agency, CAP identifier, sent and expiry time, severity, urgency, certainty and target area. Clearly separate official CAP warnings (SACHET/IMD/CWC/INCOIS) from third-party feeds (GDACS, USGS, NASA EONET) and from unverified crowd or mesh field reports.",
+    "Label casualty and damage figures with their source, an 'as of' timestamp and whether they are provisional, and keep a visible revision history. Official tolls often change, as the provisional MHA figures in Parliament replies show.",
+    "Give users a plain-language privacy notice covering what personal data is collected (identity, phone, location, mesh relay metadata), why, how long it is kept, and how to withdraw consent, in line with the DPDP Act 2023.",
+    "Publish a security and incident-disclosure policy: report cyber incidents to CERT-In within 6 hours and keep ICT logs for 180 days in India (CERT-In Directions, 28 Apr 2022). Tell affected users promptly when their data is involved.",
+    "Publish a model card for any forecast (e.g. XGBoost on IBTrACS): training data and version, validation error, known limits, and a clear note that it is experimental and does not replace IMD's official warnings."
+  ]
+}

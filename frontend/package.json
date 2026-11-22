@@ -1,43 +1,40 @@
 {
-  "name": "volentify-frontend",
-  "version": "2.0.0",
+  "name": "volentify",
+  "version": "3.5.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"next dev\" \"python -m uvicorn api.index:app --reload --port 8000\"",
-    "dev:next": "next dev -p 3000",
-    "build": "prisma generate && next build",
+    "dev": "concurrently -k -n web,api -c yellow,cyan \"next dev\" \"npm:api\"",
+    "api": "python -m uvicorn api.index:app --reload --port 8000",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "prisma:generate": "prisma generate",
-    "prisma:seed": "npx tsx prisma/seed.ts"
+    "typecheck": "tsc --noEmit",
+    "test": "python -m pytest tests -q",
+    "db:push": "prisma db push",
+    "db:seed": "python -m api._lib.data.seed"
   },
-  "prisma": {
-    "seed": "npx tsx prisma/seed.ts"
-  },
-
   "dependencies": {
-    "@prisma/client": "6.4.0",
-    "clsx": "^2.1.1",
-    "framer-motion": "^11.15.0",
+    "@prisma/client": "^6.19.3",
+    "@vercel/analytics": "^2.0.1",
+    "jose": "^5.9.6",
     "lucide-react": "^0.469.0",
     "maplibre-gl": "^4.7.1",
-    "next": "^15.1.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "react-icons": "^5.4.0",
-    "recharts": "^2.15.0",
-    "tailwind-merge": "^2.6.0",
+    "next": "^15.5.28",
+    "qrcode": "^1.5.4",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^3.2.1",
     "three": "^0.171.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "@types/three": "^0.171.0",
     "autoprefixer": "^10.4.20",
-    "concurrently": "^10.0.5",
+    "concurrently": "^9.1.0",
     "postcss": "^8.4.49",
-    "prisma": "6.4.0",
+    "prisma": "^6.19.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2"
   }

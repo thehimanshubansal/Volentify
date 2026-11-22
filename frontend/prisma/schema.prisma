@@ -1,9 +1,22 @@
+// Volentify data model (PRD §9.2). Database: Neon PostgreSQL (Vercel Storage → neon-volentify).
+// Apply with: npm run db:push (DIRECT_URL = Neon's unpooled string)   ·   Prepare + pull live feeds: npm run db:seed
+//
+// Additions to the PRD schema, all required by shipped features:
+//   users.password_hash          scrypt hash for credential sign-in (was an unmapped camelCase column)
+//   users.profile_data           role-specific onboarding telemetry (household, quotas, agency details)
+//   users.muster_code/_issued_at digital muster pass issued at onboarding
+//   mesh_events.review_status    FR-16 operator review, OD-07 dashed rendering until reviewed
+//   mesh_events.promoted_task_id mission created when a report is promoted
+//   tasks.accepted_at … outcome   mission lifecycle and outcome (start position, people helped)
+//   volunteer_reviews             ratings of volunteers by other members
+//   audit_log                     hash-chained audit trail of privileged actions (CERT-In: ≥ 180 days)
+//   blocked_nodes                 phones quarantined after deliberate false reports
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
-
 
 generator client {
   provider = "prisma-client-js"
@@ -40,166 +53,353 @@ enum SourceType {
   CITIZEN
 }
 
+enum MeshEventType {
+  PERSON_RESCUED
+  PERSON_MISSING
+  PERSON_TRAPPED
+  MEDICAL_EMERGENCY
+  FIRE
+  FLOOD
+  RESOURCE_REQUEST
+  VOLUNTEER_STATUS
+  DISASTER_STATUS
+}
+
+enum MeshPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ReviewStatus {
+  UNREVIEWED
+  REVIEWED
+  PROMOTED
+  REJECTED
+}
+
 model User {
-  id               String          @id @default(cuid())
+  id               String            @id @default(cuid())
   name             String
-  email            String          @unique
-  phone            String          // Mandatory mobile number for emergency CAP broadcast & field dispatch
-  passwordHash     String?         @default("volentify_secure_hash")
-  role             Role            @default(CITIZEN)
-  stateDistrict    String?
+  email            String            @unique
+  phone            String            @default("") // 10-digit mobile, mandatory after onboarding
+  passwordHash     String?           @map("password_hash")
+  role             Role              @default(CITIZEN)
+  stateDistrict    String?           @map("state_district")
   lat              Float?
   lng              Float?
-  provider         String          @default("credentials") // "credentials" or "google"
-  googleId         String?         @unique
-  avatarUrl        String?
-  bloodGroup       String?
-  emergencyContact String?
-  isVerified       Boolean         @default(false)
-  onboarded        Boolean         @default(false)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-
-  volunteer        VolunteerProfile?
-  organization     Organization?   @relation(fields: [orgId], references: [id])
-  orgId            String?
-  tasksCreated     Task[]          @relation("CreatedTasks")
-  tasksAssigned    Task[]          @relation("AssignedVolunteer")
-  evidencePosts    Evidence[]
-  alertsSent       Alert[]         @relation("AlertSender")
+  provider         String            @default("credentials")
+  googleId         String?           @unique @map("google_id")
+  avatarUrl        String?           @map("avatar_url")
+  bloodGroup       String?           @map("blood_group")
+  emergencyContact String?           @map("emergency_contact")
+  isVerified       Boolean           @default(false) @map("is_verified")
+  onboarded        Boolean           @default(false)
+  profileData      Json              @default("{}") @map("profile_data")
+  musterCode       String?           @map("muster_code")
+  musterIssuedAt   DateTime?         @map("muster_issued_at")
+  orgId            String?           @map("org_id")
+  organization     Organization?     @relation(fields: [orgId], references: [id])
+  volunteerProfile VolunteerProfile?
+  createdTasks     Task[]            @relation("CreatedTasks")
+  assignedTasks    Task[]            @relation("AssignedTasks")
+  evidenceAuthored Evidence[]
+  alertsSent       Alert[]
+  reviewsReceived  VolunteerReview[]  @relation("ReviewsReceived")
+  reviewsWritten   VolunteerReview[]  @relation("ReviewsWritten")
+  createdAt        DateTime          @default(now()) @map("created_at")
+  updatedAt        DateTime          @default(now()) @updatedAt @map("updated_at")
 
   @@index([role])
   @@index([email])
   @@index([phone])
+  @@map("users")
 }
 
 model VolunteerProfile {
-  id              String       @id @default(cuid())
-  userId          String       @unique
-  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  skills          String[]     // ["Paramedic", "Rescue & Search", "Boat Operator", "First Aid", "Food Logistics", "Debris Clearing"]
-  currentLat      Float
-  currentLng      Float
-  locationName    String       @default("Field Location")
-  availability    String       @default("AVAILABLE") // AVAILABLE, BUSY, OFFLINE
-  missionsDone    Int          @default(0)
-  totalHours      Float        @default(0.0)
-  equipment       String[]     @default([])
-  badgeLevel      String       @default("Tier-1 Field Responder")
-  responseRate    Float        @default(98.0)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id           String     @id @default(cuid())
+  userId       String     @unique @map("user_id")
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  skills       String[]
+  currentLat   Float      @map("current_lat")
+  currentLng   Float      @map("current_lng")
+  locationName String     @default("Field Location") @map("location_name")
+  availability String     @default("AVAILABLE")
+  missionsDone Int        @default(0) @map("missions_done")
+  totalHours   Float      @default(0.0) @map("total_hours")
+  equipment    String[]   @default([])
+  badgeLevel   String     @default("Tier-1 Field Responder") @map("badge_level")
+  responseRate Float      @default(98.0) @map("response_rate")
+  meshNodes    MeshNode[]
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @default(now()) @updatedAt @map("updated_at")
 
   @@index([availability])
+  @@map("volunteer_profiles")
 }
 
 model Organization {
-  id             String      @id @default(cuid())
-  name           String      @unique
-  category       String      // "NDRF", "SDRF", "RED_CROSS", "LOCAL_NGO", "CIVIL_DEFENSE"
+  id             String     @id @default(cuid())
+  name           String     @unique
+  category       String // NDRF, SDRF, RED_CROSS, LOCAL_NGO, CIVIL_DEFENSE
   state          String
   district       String
-  contactEmail   String
-  contactPhone   String
-  registrationNo String?
-  verified       Boolean     @default(true)
-  members        User[]
+  contactEmail   String     @map("contact_email")
+  contactPhone   String     @map("contact_phone")
+  registrationNo String?    @map("registration_no")
+  verified       Boolean    @default(true)
+  users          User[]
   disasters      Disaster[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  createdAt      DateTime   @default(now()) @map("created_at")
+
+  @@map("organizations")
 }
 
 model Disaster {
-  id             String      @id @default(cuid())
-  code           String      @unique // e.g. "ALT-101", "DIS-2026-089"
+  id             String        @id @default(cuid())
+  code           String        @unique
   title          String
-  category       String      // "Cyclone", "Flood", "Wildfire", "Earthquake", "Landslide", "Heatwave"
-  severity       Severity    @default(HIGH)
+  category       String
+  severity       Severity      @default(HIGH)
   lat            Float
   lng            Float
-  location       String      // e.g. "Puri Coast, Odisha"
+  location       String
   state          String
-  radiusKm       Float       @default(25.0)
-  polygonGeoJson String?     // Serialized GeoJSON buffer/contour
-  status         String      @default("ACTIVE") // "ACTIVE", "MONITORING", "CONTAINED", "RESOLVED"
-  affectedPop    String?     // e.g. "1.4M"
+  radiusKm       Float         @default(25.0) @map("radius_km")
+  polygonGeoJson String?       @map("polygon_geojson")
+  status         String        @default("ACTIVE")
+  affectedPop    String?       @map("affected_pop")
   summary        String
-  windSpeedKmh   Float?
-  rainfallMm     Float?
-  surgeMeters    Float?
-  orgId          String?
-  org            Organization? @relation(fields: [orgId], references: [id])
+  windSpeedKmh   Float?        @map("wind_speed_kmh")
+  rainfallMm     Float?        @map("rainfall_mm")
+  surgeMeters    Float?        @map("surge_meters")
+  orgId          String?       @map("org_id")
+  organization   Organization? @relation(fields: [orgId], references: [id])
+  source         String?       // live feed: GDACS | USGS | NASA EONET (null for incidents declared on the platform)
+  sourceUrl      String?       @map("source_url")
+  externalId     String?       @map("external_id")
   tasks          Task[]
   evidence       Evidence[]
   alerts         Alert[]
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  meshEvents     MeshEvent[]
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at")
 
   @@index([severity])
   @@index([category])
   @@index([state])
+  @@index([source])
+  @@index([status])
+  @@map("disasters")
 }
 
 model Task {
-  id             String       @id @default(cuid())
-  code           String       @unique // e.g. "TSK-001"
+  id             String     @id @default(cuid())
+  code           String     @unique
   title          String
   description    String?
-  urgency        Severity     @default(HIGH)
-  requiredSkill  String       // "Rescue & Search", "Paramedic", "Food & Shelter Logistics", etc.
+  urgency        Severity   @default(HIGH)
+  requiredSkill  String     @map("required_skill")
   lat            Float
   lng            Float
-  locationName   String       @default("Incident Site")
-  quantityNeeded Int          @default(1)
-  status         TaskStatus   @default(OPEN)
-  disasterId     String
-  disaster       Disaster     @relation(fields: [disasterId], references: [id], onDelete: Cascade)
-  createdById    String
-  createdBy      User         @relation("CreatedTasks", fields: [createdById], references: [id])
-  assignedToId   String?
-  assignedTo     User?        @relation("AssignedVolunteer", fields: [assignedToId], references: [id])
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  locationName   String     @default("Incident Site") @map("location_name")
+  quantityNeeded Int        @default(1) @map("quantity_needed")
+  status         TaskStatus @default(OPEN)
+  disasterId     String     @map("disaster_id")
+  disaster       Disaster   @relation(fields: [disasterId], references: [id], onDelete: Cascade)
+  createdById    String     @map("created_by_id")
+  createdBy      User       @relation("CreatedTasks", fields: [createdById], references: [id])
+  assignedToId   String?    @map("assigned_to_id")
+  assignedTo     User?      @relation("AssignedTasks", fields: [assignedToId], references: [id])
+  meshEvents     MeshEvent[]
+  reviews        VolunteerReview[]
+  acceptedAt     DateTime?  @map("accepted_at")
+  startedAt      DateTime?  @map("started_at")
+  completedAt    DateTime?  @map("completed_at")
+  startLat       Float?     @map("start_lat")
+  startLng       Float?     @map("start_lng")
+  peopleHelped   Int?       @map("people_helped")
+  outcomeNote    String?    @map("outcome_note")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at")
 
   @@index([urgency])
   @@index([status])
   @@index([requiredSkill])
+  @@map("tasks")
 }
 
 model Evidence {
-  id          String      @id @default(cuid())
-  disasterId  String
-  disaster    Disaster    @relation(fields: [disasterId], references: [id], onDelete: Cascade)
-  authorId    String?
-  author      User?       @relation(fields: [authorId], references: [id])
-  source      String      // "IMD Coastal Radar", "CWC Telemetry", "NDRF Command", "X (Twitter)", "Citizen SOS"
-  sourceType  SourceType  @default(OFFICIAL)
-  claimText   String
-  relation    String      @default("SUPPORTING") // "SUPPORTING", "CONFLICTING", "DUPLICATE"
-  confidence  Float       @default(0.92)
-  language    String      @default("en") // "en", "hi", "or", "bn", "ta", "ml"
-  createdAt   DateTime    @default(now())
+  id         String     @id @default(cuid())
+  disasterId String     @map("disaster_id")
+  disaster   Disaster   @relation(fields: [disasterId], references: [id], onDelete: Cascade)
+  authorId   String?    @map("author_id")
+  author     User?      @relation(fields: [authorId], references: [id])
+  source     String
+  sourceType SourceType @default(OFFICIAL) @map("source_type")
+  claimText  String     @map("claim_text")
+  relation   String     @default("SUPPORTING")
+  confidence Float      @default(0.92)
+  language   String     @default("en")
+  createdAt  DateTime   @default(now()) @map("created_at")
 
   @@index([sourceType])
   @@index([relation])
+  @@map("evidence")
 }
 
 model Alert {
-  id          String      @id @default(cuid())
-  code        String      @unique // e.g. "ALT-BRDCST-001"
+  id          String    @id @default(cuid())
+  code        String    @unique
   title       String
-  category    String      // "Cyclone", "Flood", "Wildfire", "Landslide", "Heatwave"
-  level       Severity    @default(CRITICAL)
+  category    String
+  level       Severity  @default(CRITICAL)
   location    String
   state       String
   description String
   advisory    String
-  disasterId  String?
-  disaster    Disaster?   @relation(fields: [disasterId], references: [id])
-  senderId    String?
-  sender      User?       @relation("AlertSender", fields: [senderId], references: [id])
-  sentAt      DateTime    @default(now())
+  disasterId  String?   @map("disaster_id")
+  disaster    Disaster? @relation(fields: [disasterId], references: [id])
+  senderId    String?   @map("sender_id")
+  sender      User?     @relation(fields: [senderId], references: [id])
+  createdAt   DateTime  @default(now()) @map("created_at")
 
   @@index([level])
   @@index([state])
+  @@map("alerts")
+}
+
+model MeshNode {
+  id           String            @id @default(uuid())
+  nodeUuid     String            @unique @map("node_uuid")
+  volunteerId  String?           @map("volunteer_id")
+  volunteer    VolunteerProfile? @relation(fields: [volunteerId], references: [id])
+  lastLat      Float?            @map("last_lat")
+  lastLng      Float?            @map("last_lng")
+  batteryLevel Float?            @map("battery_level")
+  lastSeenAt   DateTime          @default(now()) @map("last_seen_at")
+  createdAt    DateTime          @default(now()) @map("created_at")
+
+  eventsOriginated MeshEvent[] @relation("NodeOriginatedEvents")
+
+  @@index([lastSeenAt])
+  @@map("mesh_nodes")
+}
+
+model MeshEvent {
+  id             String        @id @default(cuid())
+  eventId        String        @unique @map("event_id")
+  originNodeId   String        @map("origin_node_id")
+  originNode     MeshNode      @relation("NodeOriginatedEvents", fields: [originNodeId], references: [nodeUuid])
+  disasterId     String?       @map("disaster_id")
+  disaster       Disaster?     @relation(fields: [disasterId], references: [id])
+  type           MeshEventType
+  priority       MeshPriority  @default(MEDIUM)
+  payload        Json
+  lat            Float?
+  lng            Float?
+  observedAt     DateTime      @map("observed_at")
+  hopCount       Int           @default(0) @map("hop_count")
+  ttl            Int           @default(5)
+  receivedAt     DateTime      @default(now()) @map("received_at")
+  reviewStatus   ReviewStatus  @default(UNREVIEWED) @map("review_status")
+  promotedTaskId String?       @map("promoted_task_id")
+  promotedTask   Task?         @relation(fields: [promotedTaskId], references: [id])
+
+  @@index([type])
+  @@index([priority])
+  @@index([observedAt])
+  @@index([disasterId])
+  @@map("mesh_events")
+}
+
+/// Live hazard feed bookkeeping (api/_lib/engines/live.py).
+model FeedState {
+  feed     String   @id
+  syncedAt DateTime @default(now()) @map("synced_at") @db.Timestamptz(6)
+  status   Json?
+
+  @@map("feed_state")
+}
+
+/// Cached third-party lookups, e.g. OpenStreetMap facilities near active incidents.
+model FeedCache {
+  key       String   @id
+  payload   Json
+  fetchedAt DateTime @default(now()) @map("fetched_at") @db.Timestamptz(6)
+
+  @@map("feed_cache")
+}
+
+/// Applied API migrations (api/_lib/data/migrations.py).
+model VolentifyMigration {
+  name      String   @id
+  appliedAt DateTime @default(now()) @map("applied_at") @db.Timestamptz(6)
+
+  @@map("volentify_migrations")
+}
+
+model VolunteerReview {
+  id              String   @id
+  volunteerUserId String   @map("volunteer_user_id")
+  volunteer       User     @relation("ReviewsReceived", fields: [volunteerUserId], references: [id], onDelete: Cascade)
+  authorId        String   @map("author_id")
+  author          User     @relation("ReviewsWritten", fields: [authorId], references: [id], onDelete: Cascade)
+  taskId          String?  @map("task_id")
+  task            Task?    @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  rating          Int
+  comment         String   @default("")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([volunteerUserId, authorId], map: "volunteer_reviews_volunteer_author_key")
+  @@map("volunteer_reviews")
+}
+
+model AuditLog {
+  id         BigInt   @id @default(autoincrement())
+  at         DateTime @default(now()) @db.Timestamptz
+  actorId    String?  @map("actor_id")
+  actorEmail String?  @map("actor_email")
+  actorRole  String?  @map("actor_role")
+  action     String
+  targetType String?  @map("target_type")
+  targetId   String?  @map("target_id")
+  detail     Json     @default("{}")
+  ip         String?
+  prevHash   String?  @map("prev_hash")
+  hash       String?
+
+  @@index([at])
+  @@index([action])
+  @@map("audit_log")
+}
+
+model BlockedNode {
+  nodeUuid  String   @id @map("node_uuid")
+  reason    String
+  blockedBy String?  @map("blocked_by")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@map("blocked_nodes")
+}
+
+model ResearchLog {
+  id         BigInt   @id @default(autoincrement())
+  kind       String
+  source     String
+  ref        String?
+  recordedAt DateTime @default(now()) @map("recorded_at") @db.Timestamptz
+  payload    Json
+
+  @@map("research_log")
+}
+
+model RateLimit {
+  key         String   @id
+  windowStart DateTime @default(now()) @map("window_start") @db.Timestamptz
+  hits        Int      @default(0)
+
+  @@map("rate_limits")
 }

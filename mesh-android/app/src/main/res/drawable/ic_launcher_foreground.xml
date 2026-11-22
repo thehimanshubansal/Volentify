@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Three relay rings around a hazard diamond: the mesh mark. -->
+    <path android:strokeColor="#F4F1EA" android:strokeWidth="2" android:fillColor="#00000000"
+        android:pathData="M54,30a24,24 0 1,1 0,48a24,24 0 1,1 0,-48" android:strokeAlpha="0.35" />
+    <path android:strokeColor="#F4F1EA" android:strokeWidth="2" android:fillColor="#00000000"
+        android:pathData="M54,40a14,14 0 1,1 0,28a14,14 0 1,1 0,-28" android:strokeAlpha="0.6" />
+    <path android:fillColor="#FF6B00" android:pathData="M54,46 L62,54 L54,62 L46,54 Z" />
+</vector>

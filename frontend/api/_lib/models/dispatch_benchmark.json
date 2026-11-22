@@ -1,0 +1,240 @@
+{
+  "name": "volentify-dispatch-benchmark",
+  "generated_at": "2026-11-16T01:02:10+00:00",
+  "engine": "frontend/api/_lib/engines/dispatch.py",
+  "engine_constants": {
+    "urgency_weight": {
+      "CRITICAL": 10.0,
+      "HIGH": 5.0,
+      "MODERATE": 2.0,
+      "LOW": 1.0
+    },
+    "similarity": {
+      "exact": 1.0,
+      "adjacent": 0.55,
+      "generic": 0.1
+    },
+    "squander_penalty": 0.12,
+    "d0_km": 15.0,
+    "beta_fatigue": 0.15,
+    "rare_pool_size": 3
+  },
+  "design": {
+    "seeds_per_size": 5,
+    "milp_time_limit_s": 10.0,
+    "scenario": "synthetic responders and missions around one Indian incident area per scenario (four areas rotate by seed); skill and urgency mixes in dispatch_bench.py; specialist demand exceeds specialist supply",
+    "metrics": {
+      "critical_fill": "share of critical mission slots filled",
+      "weighted_fill": "filled slots weighted by urgency (10/5/2/1) over requested",
+      "score_vs_optimum": "total C(i,j) relative to the Hungarian maximum",
+      "specialists_on_generic": "share of rare specialists used who were sent to generic work",
+      "latency_ms_median": "wall-clock per cycle, single CPU core, Python; exact methods include building the score matrix"
+    }
+  },
+  "results": [
+    {
+      "responders": 40,
+      "missions": 18,
+      "slots": 46,
+      "methods": {
+        "sperling": {
+          "latency_ms_median": 1.71,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.9198,
+          "completeness": 0.8521,
+          "critical_fill": 0.8833,
+          "high_fill": 0.6857,
+          "weighted_fill": 0.8299,
+          "mean_distance_km": 17.8614,
+          "specialists_on_generic": 0.14
+        },
+        "nearest": {
+          "latency_ms_median": 0.52,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.5839,
+          "completeness": 0.8172,
+          "critical_fill": 0.525,
+          "high_fill": 0.6381,
+          "weighted_fill": 0.6852,
+          "mean_distance_km": 13.9058,
+          "specialists_on_generic": 0.335
+        },
+        "optimum": {
+          "latency_ms_median": 3.52,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 1.0,
+          "completeness": 0.8521,
+          "critical_fill": 0.8583,
+          "high_fill": 0.7143,
+          "weighted_fill": 0.8255,
+          "mean_distance_km": 15.4695,
+          "specialists_on_generic": 0.14
+        },
+        "milp_lex": {
+          "latency_ms_median": 17.67,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.9856,
+          "completeness": 0.8521,
+          "critical_fill": 0.8833,
+          "high_fill": 0.6857,
+          "weighted_fill": 0.8313,
+          "mean_distance_km": 15.5051,
+          "specialists_on_generic": 0.14
+        }
+      }
+    },
+    {
+      "responders": 150,
+      "missions": 66,
+      "slots": 169,
+      "methods": {
+        "sperling": {
+          "latency_ms_median": 19.51,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.9177,
+          "completeness": 0.8698,
+          "critical_fill": 1.0,
+          "high_fill": 0.8086,
+          "weighted_fill": 0.9036,
+          "mean_distance_km": 16.1575,
+          "specialists_on_generic": 0.0
+        },
+        "nearest": {
+          "latency_ms_median": 6.62,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.558,
+          "completeness": 0.8543,
+          "critical_fill": 0.6431,
+          "high_fill": 0.7066,
+          "weighted_fill": 0.7507,
+          "mean_distance_km": 12.267,
+          "specialists_on_generic": 0.1333
+        },
+        "optimum": {
+          "latency_ms_median": 43.96,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 1.0,
+          "completeness": 0.8722,
+          "critical_fill": 1.0,
+          "high_fill": 0.819,
+          "weighted_fill": 0.907,
+          "mean_distance_km": 12.7772,
+          "specialists_on_generic": 0.0
+        },
+        "milp_lex": {
+          "latency_ms_median": 313.08,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.9904,
+          "completeness": 0.8722,
+          "critical_fill": 1.0,
+          "high_fill": 0.8286,
+          "weighted_fill": 0.9119,
+          "mean_distance_km": 12.8295,
+          "specialists_on_generic": 0.0
+        }
+      }
+    },
+    {
+      "responders": 500,
+      "missions": 220,
+      "slots": 544,
+      "methods": {
+        "sperling": {
+          "latency_ms_median": 202.87,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.9144,
+          "completeness": 0.9082,
+          "critical_fill": 1.0,
+          "high_fill": 0.9325,
+          "weighted_fill": 0.9395,
+          "mean_distance_km": 12.5028,
+          "specialists_on_generic": 0.0
+        },
+        "nearest": {
+          "latency_ms_median": 66.93,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.562,
+          "completeness": 0.8547,
+          "critical_fill": 0.6864,
+          "high_fill": 0.7601,
+          "weighted_fill": 0.7713,
+          "mean_distance_km": 9.0782,
+          "specialists_on_generic": 0.0
+        },
+        "optimum": {
+          "latency_ms_median": 467.17,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 1.0,
+          "completeness": 0.909,
+          "critical_fill": 1.0,
+          "high_fill": 0.9428,
+          "weighted_fill": 0.9432,
+          "mean_distance_km": 9.9276,
+          "specialists_on_generic": 0.0
+        },
+        "milp_lex": {
+          "latency_ms_median": 8764.84,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.9997,
+          "completeness": 0.909,
+          "critical_fill": 1.0,
+          "high_fill": 0.948,
+          "weighted_fill": 0.9447,
+          "mean_distance_km": 9.9699,
+          "specialists_on_generic": 0.0
+        }
+      }
+    },
+    {
+      "responders": 1000,
+      "missions": 440,
+      "slots": 1125,
+      "methods": {
+        "sperling": {
+          "latency_ms_median": 816.66,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.8995,
+          "completeness": 0.8811,
+          "critical_fill": 1.0,
+          "high_fill": 0.8598,
+          "weighted_fill": 0.9146,
+          "mean_distance_km": 11.0232,
+          "specialists_on_generic": 0.0
+        },
+        "nearest": {
+          "latency_ms_median": 261.57,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 0.5545,
+          "completeness": 0.8413,
+          "critical_fill": 0.6721,
+          "high_fill": 0.7276,
+          "weighted_fill": 0.7506,
+          "mean_distance_km": 8.4017,
+          "specialists_on_generic": 0.0
+        },
+        "optimum": {
+          "latency_ms_median": 1945.82,
+          "timeout_rate": 0.0,
+          "score_vs_optimum": 1.0,
+          "completeness": 0.8818,
+          "critical_fill": 1.0,
+          "high_fill": 0.8566,
+          "weighted_fill": 0.9148,
+          "mean_distance_km": 8.4866,
+          "specialists_on_generic": 0.0
+        },
+        "milp_lex": {
+          "latency_ms_median": 20017.04,
+          "timeout_rate": 1.0,
+          "score_vs_optimum": null,
+          "completeness": null,
+          "critical_fill": null,
+          "high_fill": null,
+          "weighted_fill": null,
+          "mean_distance_km": null,
+          "specialists_on_generic": null
+        }
+      }
+    }
+  ]
+}

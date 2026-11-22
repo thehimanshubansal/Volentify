@@ -1,12 +1,11 @@
-'use client';
+import type { Metadata } from 'next';
+import MapScreen from './MapScreen';
 
-import React from 'react';
-import DisasterGISMap from '@/components/map/DisasterGISMap';
+export const metadata: Metadata = { title: 'Tactical map' };
 
-export default function MapPage() {
-  return (
-    <div className="w-full h-full bg-surface-lowest">
-      <DisasterGISMap />
-    </div>
-  );
+type Params = { incident?: string; imagery?: string; radar?: string; mission?: string; from?: string };
+
+export default async function MapPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const { incident, imagery, radar, mission, from } = await searchParams;
+  return <MapScreen incident={incident} imagery={imagery} radar={radar === '1'} mission={mission} from={from} />;
 }

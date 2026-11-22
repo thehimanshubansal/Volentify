@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Volentify - Local Map - Earthquake Zone</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#09151a",
+                        "on-secondary-container": "#a8afff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#ffb693",
+                        "surface-container": "#152127",
+                        "primary": "#ffb693",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#343d96",
+                        "surface": "#09151a",
+                        "outline-variant": "#5a4136",
+                        "primary-fixed": "#ffdbcc",
+                        "on-primary-container": "#572000",
+                        "on-secondary": "#1b247f",
+                        "tertiary": "#ffb3ac",
+                        "surface-container-high": "#202c32",
+                        "surface-tint": "#ffb693",
+                        "surface-variant": "#2a363d",
+                        "on-primary-fixed-variant": "#7a3000",
+                        "surface-container-lowest": "#041015",
+                        "primary-container": "#ff6b00",
+                        "on-secondary-fixed": "#000767",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "tertiary-fixed": "#ffdad6",
+                        "on-surface-variant": "#e2bfb0",
+                        "secondary-container": "#343d96",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#111d23",
+                        "secondary": "#bdc2ff",
+                        "surface-dim": "#09151a",
+                        "inverse-on-surface": "#263238",
+                        "surface-bright": "#2f3b41",
+                        "outline": "#a98a7d",
+                        "on-tertiary": "#680008",
+                        "error": "#ffb4ab",
+                        "on-background": "#d7e4ec",
+                        "inverse-surface": "#d7e4ec",
+                        "on-tertiary-container": "#6a0008",
+                        "tertiary-container": "#ff675e",
+                        "surface-container-highest": "#2a363d",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "inverse-primary": "#a04100",
+                        "on-primary-fixed": "#351000",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-surface": "#d7e4ec",
+                        "on-tertiary-fixed": "#410003",
+                        "secondary-fixed": "#e0e0ff",
+                        "on-primary": "#561f00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "24px",
+                        "gutter": "16px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "data-tabular": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-tabular": ["14px", { "lineHeight": "18px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        /* Map Marker Pulsing Effect */
+        @keyframes pulse-ring {
+            0% { transform: scale(0.8); opacity: 0.5; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+        .pulse-marker::before {
+            content: '';
+            position: absolute;
+            left: -50%; top: -50%;
+            width: 200%; height: 200%;
+            border-radius: 50%;
+            animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        .marker-earthquake::before { border: 2px solid #ffb4ab; } /* Error color */
+        
+        /* Grid Overlay for tactical feel */
+        .tactical-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(90, 65, 54, 0.1) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(90, 65, 54, 0.1) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md h-screen overflow-hidden flex flex-col selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-background border-b border-outline-variant">
+<div class="flex items-center gap-8">
+<div class="font-display-lg text-[24px] leading-[32px] font-bold text-primary tracking-tight">Volentify</div>
+<div class="hidden md:flex gap-6 h-full items-end pb-4">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Tactical</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body-md text-body-md" href="#">Insights</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Local Map</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-error text-on-error px-4 py-2 rounded font-label-caps text-label-caps hover:bg-error-container transition-colors animate-pulse flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">campaign</span>
+                Broadcast Alert
+            </button>
+<div class="flex gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-variant">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+</div>
+<div class="h-8 w-8 rounded-full bg-surface-variant overflow-hidden border border-outline-variant">
+<img alt="Response Commander Profile" class="w-full h-full object-cover" data-alt="A highly detailed, professional headshot of a female military response commander in a tactical dark uniform. Strong, determined expression, cinematic rim lighting, sharp focus, 8k resolution. She is lit with a subtle orange glow referencing the primary brand color, set against a dark tech-focused background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqKkRGywk1ceaD_fxGBYzunng6I-oVxzVWTcQv8OWKMet7GIe6rF2avNAdT6t349_RFh1R0VB3DNzP-Cj1GvigsrOJSbQpZ1SNcAvvQGwQ7g9WeCVprwSNprd4PtnvB3uhBszKhyZw3tufOUk2VBQzE1ZgTpLQaSJyL-8CzsWVvbPcuYyWhwNzrR-nXJ0Oz63gUwv88_uyrl6dNriFrfrxw_ML-j5UmRaY3Bz5_Dwaxa6GAF2UfLY6_Q"/>
+</div>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex h-full pt-16 relative">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 flex flex-col bg-surface-container border-r border-outline-variant">
+<div class="p-4 border-b border-outline-variant">
+<div class="flex items-center gap-3 mb-2">
+<div class="h-10 w-10 rounded bg-primary-container text-on-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined">shield</span>
+</div>
+<div>
+<h2 class="font-headline-lg text-[18px] leading-[24px] text-primary">Disaster Filters</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Active Mitigation</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-4 px-2 flex flex-col gap-1">
+<button class="w-full text-left px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all flex items-center gap-3 font-label-caps text-label-caps">
+<span class="material-symbols-outlined">water_drop</span>
+                    Floods
+                </button>
+<button class="w-full text-left px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all flex items-center gap-3 font-label-caps text-label-caps">
+<span class="material-symbols-outlined">local_fire_department</span>
+                    Wildfires
+                </button>
+<button class="w-full text-left px-3 py-2 bg-secondary-container text-on-secondary-container rounded-lg font-bold transition-all flex items-center gap-3 font-label-caps text-label-caps">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">volcano</span>
+                    Earthquakes
+                </button>
+<button class="w-full text-left px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all flex items-center gap-3 font-label-caps text-label-caps">
+<span class="material-symbols-outlined">cyclone</span>
+                    Storms
+                </button>
+<button class="w-full text-left px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all flex items-center gap-3 font-label-caps text-label-caps">
+<span class="material-symbols-outlined">warning</span>
+                    Hazmat
+                </button>
+</div>
+<div class="p-4 border-t border-outline-variant">
+<button class="w-full bg-primary text-on-primary py-2 rounded font-label-caps text-label-caps hover:bg-primary-container transition-colors mb-4">
+                    Apply Filters
+                </button>
+<div class="flex flex-col gap-2">
+<button class="text-left text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 font-label-caps text-label-caps text-[10px]">
+<span class="material-symbols-outlined text-[16px]">menu_book</span>
+                        Resources
+                    </button>
+<button class="text-left text-on-surface-variant hover:text-primary transition-colors flex items-center gap-2 font-label-caps text-label-caps text-[10px]">
+<span class="material-symbols-outlined text-[16px]">contact_support</span>
+                        Support
+                    </button>
+</div>
+</div>
+</aside>
+<!-- Map Canvas Area -->
+<main class="ml-64 w-full h-full relative tactical-grid bg-surface">
+<!-- Base Satellite Layer Placeholder -->
+<div class="absolute inset-0 bg-cover bg-center opacity-40" data-alt="A highly detailed, military-grade satellite view of an urban coastal city suffering from a massive earthquake. Dark, moody aesthetics with glowing topographic overlays. The city shows damaged infrastructure, high-contrast shadows, and stark terrain features. Color palette leans heavily on deep teal greens, dark greys, and stark charcoal, perfectly matching a dark-mode tactical UI." data-location="San Francisco" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCt44V0iK7mQj2ePaohwwK7QTdtAMGDblmhPuCm2momXATX2bz_DvbF7aqvscWa-0NjZXDrJSG489_vETtw43GMvKE_W3-aP8_o9-OMNvMkjN16qaAdpWzgcH8ln5w5N4NaCnXkjX1we8RjeONPg0mDtEq8pi3QyfOwd_oVv5Ns_sXDTMyOuFHwcfr__-o9r3sw6HtssaLovhrebD3H6KKM8ceD_uBUMKenAbm8SCwvy1saEope1qCYlQ')"></div>
+<!-- Map Overlay Gradient for readability -->
+<div class="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none"></div>
+<!-- Tactical Map Markers -->
+<!-- Epicenter -->
+<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<div class="relative pulse-marker marker-earthquake w-6 h-6 rotate-45 bg-error border border-on-error flex items-center justify-center cursor-pointer hover:scale-110 transition-transform">
+<span class="material-symbols-outlined -rotate-45 text-on-error text-[14px]">volcano</span>
+</div>
+<div class="mt-2 bg-surface-container-high border border-error text-error px-2 py-1 rounded font-data-tabular text-[10px] whitespace-nowrap shadow-md">
+                     EPICENTER - M 7.2
+                 </div>
+</div>
+<!-- Shelter Marker -->
+<div class="absolute top-1/3 left-1/4 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<div class="relative w-5 h-5 rounded-full bg-secondary-container border border-secondary flex items-center justify-center cursor-pointer hover:bg-secondary transition-colors">
+<span class="material-symbols-outlined text-on-secondary-container text-[12px]">home</span>
+</div>
+</div>
+<!-- Medical Station Marker -->
+<div class="absolute bottom-1/4 right-1/3 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<div class="relative w-5 h-5 bg-primary-container border border-primary flex items-center justify-center cursor-pointer hover:bg-primary transition-colors">
+<span class="material-symbols-outlined text-on-primary-container text-[12px]">medical_services</span>
+</div>
+</div>
+<!-- HUD Overlay Panels (Bento Grid Style) -->
+<div class="absolute inset-4 pointer-events-none flex flex-col justify-between">
+<!-- Top Row: Status Banner -->
+<div class="flex justify-center w-full">
+<div class="pointer-events-auto bg-surface-container-high/90 backdrop-blur-sm border border-outline-variant rounded-lg px-6 py-3 flex items-center gap-4 shadow-lg">
+<div class="h-3 w-3 rounded-full bg-error animate-pulse"></div>
+<span class="font-label-caps text-label-caps text-on-surface">STATUS: ACTIVE SEISMIC EVENT // SECTOR 7G</span>
+<span class="font-data-tabular text-data-tabular text-primary">T+ 04:22:15</span>
+</div>
+</div>
+<!-- Bottom Row: Telemetry Panels -->
+<div class="flex justify-between items-end gap-gutter w-full">
+<!-- Left Panel: Legend & Filters -->
+<div class="pointer-events-auto w-72 bg-surface-container/95 backdrop-blur border border-outline-variant rounded-lg p-4 shadow-lg flex flex-col gap-3">
+<h3 class="font-label-caps text-label-caps text-primary border-b border-outline-variant pb-2">Active Overlays</h3>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="form-checkbox bg-surface border-outline-variant text-primary rounded focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+<span class="w-3 h-3 rounded-full bg-secondary-container border border-secondary inline-block"></span>
+<span class="font-body-sm text-[12px] text-on-surface group-hover:text-primary transition-colors">Emergency Shelters (24)</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="form-checkbox bg-surface border-outline-variant text-primary rounded focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+<span class="w-3 h-3 bg-primary-container border border-primary inline-block"></span>
+<span class="font-body-sm text-[12px] text-on-surface group-hover:text-primary transition-colors">Medical Stations (8)</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-checkbox bg-surface border-outline-variant text-primary rounded focus:ring-0 focus:ring-offset-0" type="checkbox"/>
+<span class="w-3 h-1 bg-error inline-block"></span>
+<span class="font-body-sm text-[12px] text-on-surface-variant group-hover:text-on-surface transition-colors">Road Closures</span>
+</label>
+</div>
+</div>
+<!-- Right Panel: Critical Feed -->
+<div class="pointer-events-auto w-96 bg-surface-container/95 backdrop-blur border border-outline-variant rounded-lg flex flex-col shadow-lg overflow-hidden">
+<div class="p-3 bg-surface-container-high border-b border-outline-variant flex justify-between items-center">
+<h3 class="font-label-caps text-label-caps text-error flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">warning</span>
+                                 Critical Updates
+                             </h3>
+<span class="font-data-tabular text-[10px] text-on-surface-variant">LIVE</span>
+</div>
+<div class="flex flex-col h-48 overflow-y-auto p-2 gap-2">
+<div class="bg-surface p-2 border-l-2 border-error rounded-r flex flex-col gap-1">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant">04:15 PM</span>
+<span class="bg-error/10 text-error px-1 rounded text-[9px] font-bold">URGENT</span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface">Bridge 4A structural integrity compromised. Reroute all heavy convoys immediately.</p>
+</div>
+<div class="bg-surface p-2 border-l-2 border-primary rounded-r flex flex-col gap-1">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant">04:10 PM</span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface">Medevac ETA to Sector 3 updated to 5 minutes.</p>
+</div>
+<div class="bg-surface p-2 border-l-2 border-outline-variant rounded-r flex flex-col gap-1 opacity-70">
+<div class="flex justify-between items-center">
+<span class="font-label-caps text-[10px] text-on-surface-variant">03:55 PM</span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface-variant">Initial damage assessment complete for downtown grid.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

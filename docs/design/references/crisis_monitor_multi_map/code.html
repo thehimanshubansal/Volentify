@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Volentify - Global Crisis Monitor</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#09151a",
+                        "on-secondary-container": "#a8afff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#ffb693",
+                        "surface-container": "#152127",
+                        "primary": "#ffb693",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#343d96",
+                        "surface": "#09151a",
+                        "outline-variant": "#5a4136",
+                        "primary-fixed": "#ffdbcc",
+                        "on-primary-container": "#572000",
+                        "on-secondary": "#1b247f",
+                        "tertiary": "#ffb3ac",
+                        "surface-container-high": "#202c32",
+                        "surface-tint": "#ffb693",
+                        "surface-variant": "#2a363d",
+                        "on-primary-fixed-variant": "#7a3000",
+                        "surface-container-lowest": "#041015",
+                        "primary-container": "#ff6b00",
+                        "on-secondary-fixed": "#000767",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "tertiary-fixed": "#ffdad6",
+                        "on-surface-variant": "#e2bfb0",
+                        "secondary-container": "#343d96",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#111d23",
+                        "secondary": "#bdc2ff",
+                        "surface-dim": "#09151a",
+                        "inverse-on-surface": "#263238",
+                        "surface-bright": "#2f3b41",
+                        "outline": "#a98a7d",
+                        "on-tertiary": "#680008",
+                        "error": "#ffb4ab",
+                        "on-background": "#d7e4ec",
+                        "inverse-surface": "#d7e4ec",
+                        "on-tertiary-container": "#6a0008",
+                        "tertiary-container": "#ff675e",
+                        "surface-container-highest": "#2a363d",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "inverse-primary": "#a04100",
+                        "on-primary-fixed": "#351000",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-surface": "#d7e4ec",
+                        "on-tertiary-fixed": "#410003",
+                        "secondary-fixed": "#e0e0ff",
+                        "on-primary": "#561f00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "24px",
+                        "gutter": "16px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "data-tabular": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-tabular": ["14px", { "lineHeight": "18px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .data-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; }
+        .pulse-alert { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 180, 171, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 180, 171, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 180, 171, 0); }
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen overflow-hidden flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-background border-b border-outline-variant dark:border-outline-variant">
+<div class="flex items-center gap-6">
+<div class="font-display-lg text-display-lg font-bold text-primary dark:text-primary leading-none tracking-tight">Volentify</div>
+<nav class="hidden md:flex gap-4">
+<a class="text-primary dark:text-primary border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Dashboard</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors font-body-md text-body-md pb-1" href="#">Tactical</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors font-body-md text-body-md pb-1" href="#">Insights</a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:text-primary dark:hover:text-primary transition-colors font-body-md text-body-md pb-1" href="#">Local Map</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-error text-on-error px-4 py-2 rounded-DEFAULT font-label-caps text-label-caps pulse-alert hover:bg-error-container transition-colors">Broadcast Alert</button>
+<div class="flex gap-2 text-on-surface-variant">
+<button class="p-2 hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="notifications">notifications</span></button>
+<button class="p-2 hover:text-primary transition-colors"><span class="material-symbols-outlined" data-icon="settings">settings</span></button>
+</div>
+<img alt="Response Commander Profile" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="A small, high-contrast avatar image of a tactical commander in a dark environment, intense professional lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCb78SvgpjS0jJy5Vne5uqu6aYB0hBzGG_UdubqtLC4EevJqgbAxiCYcnZRE2kf1fWS9HUqyprHPnFAoa6AOaSWNYxBupqz0wHjOrXYHOLVIfKlWyiT0wpClzxWlKF_iIpRMa8wZaRSrw_z9QujkwV269zi_aDCKrXHYDapjWRLNOTAKS4WIVi1TNnQTSSY3_p5McbrNm2Y69wgtS1hmqd3Ijt4RfuZuXidSlH--sC4Rlhx6XXklJ-tzg"/>
+</div>
+</header>
+<div class="flex flex-1 pt-16">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 flex flex-col bg-surface-container dark:bg-surface-container border-r border-outline-variant dark:border-outline-variant">
+<div class="p-6 border-b border-outline-variant flex items-center gap-3">
+<img alt="Agency Logo" class="w-10 h-10 rounded-DEFAULT" data-alt="A stark, minimalist logo for a disaster response agency, geometric shapes in safety orange on a dark background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVqjoqqIzXmlMhqJhRMHtnWDJk9ilTApuzxkeLnLV1JdNtOPch4bprnmaNdNvwlsT2YBWfv3eJSPTIFP8j2oavOZ7urkk9oQTLwbQ40ltF_oKNZCPeN-0ht1423sfYU_gy6d4YBDcsnVfphl2pBRI-QZorIeyw_tskLfQnq1BoQMTdqNGzs2jvYc1brYO7Edi-C70GpMDYQ_5OH5QgEFzHv8SgOLWFbtDH4Vub2kSjVNhyzsSGgLqMcw"/>
+<div>
+<h2 class="font-title-md text-title-md text-on-surface">Disaster Filters</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Active Mitigation</p>
+</div>
+</div>
+<nav class="flex-1 p-4 flex flex-col gap-2">
+<a class="bg-secondary-container text-on-secondary-container rounded-lg font-bold font-label-caps text-label-caps p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="water_drop">water_drop</span> Floods
+                </a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant transition-all rounded-lg font-label-caps text-label-caps p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="local_fire_department">local_fire_department</span> Wildfires
+                </a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant transition-all rounded-lg font-label-caps text-label-caps p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="volcano">volcano</span> Earthquakes
+                </a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant transition-all rounded-lg font-label-caps text-label-caps p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="cyclone">cyclone</span> Storms
+                </a>
+<a class="text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-variant transition-all rounded-lg font-label-caps text-label-caps p-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined" data-icon="warning">warning</span> Hazmat
+                </a>
+</nav>
+<div class="p-4 border-t border-outline-variant">
+<button class="w-full bg-surface-variant text-on-surface py-2 rounded-DEFAULT font-label-caps text-label-caps hover:bg-primary hover:text-on-primary transition-colors mb-4">Apply Filters</button>
+<div class="flex flex-col gap-2">
+<a class="text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="menu_book">menu_book</span> Resources
+                    </a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm flex items-center gap-2" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="contact_support">contact_support</span> Support
+                    </a>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 p-margin-desktop bg-background overflow-y-auto">
+<div class="mb-gutter flex justify-between items-end">
+<div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Global Situation Overview</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Real-time telemetry and crisis escalation tracking.</p>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-high px-4 py-2 rounded-lg border border-outline-variant">
+<span class="relative flex h-3 w-3">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+<span class="relative inline-flex rounded-full h-3 w-3 bg-error"></span>
+</span>
+<span class="font-data-tabular text-data-tabular text-error">DEFCON 2</span>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="data-grid h-[calc(100vh-200px)]">
+<!-- Central Crisis Score -->
+<div class="col-span-12 md:col-span-4 bg-surface-container rounded-xl border border-outline-variant p-6 flex flex-col justify-center items-center relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-error-container/10 to-transparent pointer-events-none"></div>
+<h3 class="font-label-caps text-label-caps text-on-surface-variant mb-4 self-start">Aggregate Crisis Index</h3>
+<div class="relative w-48 h-48 flex items-center justify-center mb-6">
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 100 100">
+<circle class="text-surface-variant" cx="50" cy="50" fill="none" r="45" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-error" cx="50" cy="50" fill="none" r="45" stroke="currentColor" stroke-dasharray="283" stroke-dashoffset="60" stroke-linecap="round" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="font-display-lg text-display-lg text-error leading-none">84</span>
+<span class="font-label-caps text-label-caps text-on-error-container">CRITICAL</span>
+</div>
+</div>
+<div class="w-full grid grid-cols-2 gap-4">
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-3">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Active Incidents</div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary">142</div>
+</div>
+<div class="bg-surface border border-outline-variant rounded-DEFAULT p-3">
+<div class="font-label-caps text-label-caps text-on-surface-variant mb-1">Est. Impact (M)</div>
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-tertiary">3.4</div>
+</div>
+</div>
+</div>
+<!-- Map Multiples -->
+<div class="col-span-12 md:col-span-8 grid grid-cols-2 gap-gutter">
+<!-- Fire Map -->
+<div class="bg-surface-container rounded-xl border border-outline-variant overflow-hidden relative group">
+<div class="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur px-3 py-1 rounded-DEFAULT border border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-tertiary text-sm" data-icon="local_fire_department">local_fire_department</span>
+<span class="font-label-caps text-label-caps text-on-surface">Thermal Anomalies</span>
+</div>
+<div class="w-full h-full min-h-[200px] bg-surface-variant relative" data-alt="A high-contrast satellite map view focusing on a forested region, stark dark grey landmasses with bright glowing red and orange thermal hot-spots indicating active wildfires. UI overlay style." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD6FaIx8rE3bf8HKLVwtLkP8pLz5xs-gpp4QHGRR9zfl8Z0tpzpuZbsxSVaEtYE3X3s9HCGj4fSVZi2RWmnKQlZnluhBZgAn0WW726cj979bbJTMoR0r9TgnidoZn6Xi5oxUgsRQVVi_8v6ZpEcwmVPSBlZ5pcS2WOIvxhHT_aB0UPC1r43WYwX5QsROHdRmQN4IrIVyPc9zw5NaSoD19xzPMdwBIZnbntXHqC1VX8LmXsKCcZ7i35s8Q')">
+<!-- Overlay dots -->
+<div class="absolute top-1/3 left-1/2 w-2 h-2 bg-error rounded-full shadow-[0_0_8px_rgba(255,180,171,0.8)]"></div>
+<div class="absolute top-1/4 left-1/3 w-3 h-3 bg-tertiary rounded-full shadow-[0_0_12px_rgba(255,179,172,0.8)] animate-pulse"></div>
+</div>
+</div>
+<!-- Flood Map -->
+<div class="bg-surface-container rounded-xl border border-outline-variant overflow-hidden relative group">
+<div class="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur px-3 py-1 rounded-DEFAULT border border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-sm" data-icon="water_drop">water_drop</span>
+<span class="font-label-caps text-label-caps text-on-surface">Hydrological Alert</span>
+</div>
+<div class="w-full h-full min-h-[200px] bg-surface-variant relative" data-alt="A tactical digital map showing coastal flooding, dark navy blue water masses encroaching on stark charcoal grey land, highlighted with bright blue predictive inundation zones. Technical aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCr8gtjZBvp7yS8fdBxlU-NKnBmXAEM3weRSvjQ9daikahcEg0w4gORqDcUGtrS5HBxBCef5bapnDwS5XNA2jUk8EDyCAurLGwFtvLpmY0IZLWvlMZZyZaBQkwagDyO61EJ9TEYgWKDTTPPRHsNK6XE25Dm_PGCxRykAQ1Wl3kPRZu4-_bwAbHLOYqy_GFbohvWkXp3IHJ8dZ8Yf2CoAeNw1x552vuXfCv_p81vcg1YqKAu1o42mRocsQ')">
+<div class="absolute top-1/2 left-1/2 w-4 h-4 border-2 border-secondary rounded-full bg-secondary/20 flex items-center justify-center">
+<div class="w-1 h-1 bg-secondary rounded-full"></div>
+</div>
+</div>
+</div>
+<!-- Seismic Map -->
+<div class="bg-surface-container rounded-xl border border-outline-variant overflow-hidden relative group">
+<div class="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur px-3 py-1 rounded-DEFAULT border border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="volcano">volcano</span>
+<span class="font-label-caps text-label-caps text-on-surface">Seismic Activity</span>
+</div>
+<div class="w-full h-full min-h-[200px] bg-surface-variant relative" data-alt="A dark mode topographical map displaying tectonic fault lines in glowing orange, with concentric circles indicating recent earthquake epicenters. High tech dashboard aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBzOp-mBpxXfTKCaqhdyZoZhOvrPLbIKmkluI2NuQAieuzEsBbkyPXXdGdiS5vgL3ru-4JwMhN9SvwgYmsLx6qnBJQtOEGMCNLaBzjGwVH235biQKgg6Tkl35TUbq3psUOMNV8TH9QmxbOakcpEDfhf5PTxSwFqla4ahzccjUFmUiEraplz2qMNNfBvFU_SX717SXN_o0dCI3kFeoasHjsFNDn-W9dzU_8dGx1Qqr_NyW3HIdxsPPgI6g')">
+<div class="absolute top-2/3 left-1/4 w-10 h-10 border border-primary/50 rounded-full flex items-center justify-center">
+<div class="w-6 h-6 border border-primary/70 rounded-full flex items-center justify-center">
+<div class="w-2 h-2 bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Storm Map -->
+<div class="bg-surface-container rounded-xl border border-outline-variant overflow-hidden relative group">
+<div class="absolute top-4 left-4 z-10 bg-background/80 backdrop-blur px-3 py-1 rounded-DEFAULT border border-outline-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed text-sm" data-icon="cyclone">cyclone</span>
+<span class="font-label-caps text-label-caps text-on-surface">Meteorological</span>
+</div>
+<div class="w-full h-full min-h-[200px] bg-surface-variant relative" data-alt="A radar weather map in dark mode, showing a massive cyclonic storm system in swirling purples and whites over a dark grey ocean. Tactical display styling." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDKL98R4a9LXeQtsJJWxWLV7JHqjtqOq0i9frynAuas6OybnO-YYRS4PqfcFrmlOebbpMq_LAVbEbuMMT-9F5AdOxgTi8btayAb4sv1lH0vJ6evTLD7F4YfsHfALP6MDf7g6J8IVRzVF8YR6vTMh_1_5RGHXl0XOhSw66rlQcFsYr4qAcDgvSJlbnQQmv-O1pWd8NjmIPB_5XEZ7wFCLVUQSQQzzCChZgsiPXCBZ1NvulmeSOjHEpCOaA')">
+<!-- abstract storm path -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none" preserveaspectratio="none" viewbox="0 0 100 100">
+<path d="M 80 100 Q 50 50 20 0" fill="none" stroke="rgba(224,224,255,0.4)" stroke-dasharray="4 4" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

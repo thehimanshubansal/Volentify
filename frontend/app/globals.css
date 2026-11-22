@@ -1,114 +1,73 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Tokens ─────────────────────────────────────────────────────────────── */
 :root {
-  --bg-main: #07080a;
-  --text-heading: #f8fafc;
-  --text-body: #cbd5e1;
-  --primary-orange: #ff6b00;
+  --ink: 7 8 10;            /* page */
+  --ink-900: 12 13 16;      /* surface */
+  --ink-800: 18 20 24;      /* raised */
+  --ink-700: 27 30 35;      /* hover / inputs */
+  --ivory: 244 241 234;     /* headings */
+  --sand: 201 196 184;      /* body */
+  --stone: 141 136 126;     /* secondary */
+  --ash: 95 91 84;          /* faint */
+  --signal: 255 107 0;      /* safety orange — action & live state */
+  --signal-soft: 255 145 77;
+  --gold: 212 180 131;      /* champagne — credentials, fine rules */
+  --critical: 255 90 78;
+  --high: 255 154 60;
+  --moderate: 233 196 106;
+  --low: 127 182 154;
+  --info: 143 179 217;
+  color-scheme: dark;
 }
 
-body {
-  background-color: var(--bg-main);
-  color: var(--text-body);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-  letter-spacing: -0.01em;
-}
-
-.font-serif {
-  font-family: 'Instrument Serif', Georgia, serif;
-}
-
-.font-mono {
-  font-family: 'IBM Plex Mono', monospace;
-  font-variant-numeric: tabular-nums;
-}
-
-/* Editorial Heading Styles */
-.heading-hero {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
-
-.heading-editorial {
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
-  line-height: 1.1;
-  letter-spacing: -0.015em;
-}
-
-/* Minimal Subtle Image Card Effects */
-.img-editorial {
-  border-radius: 1.75rem; /* 28px */
-  overflow: hidden;
-  position: relative;
-}
-
-.img-editorial img {
-  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.img-editorial:hover img {
-  transform: scale(1.03);
-}
-
-/* Custom Minimal Scrollbar */
-::-webkit-scrollbar {
-  width: 4px;
-}
-::-webkit-scrollbar-track {
-  background: #07080a;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.maplibregl-ctrl-logo { display: none !important; }
-.maplibregl-ctrl-attrib { display: none !important; }
-
-/* Tactical Radar Sweep Beam Animation */
-@keyframes radar-sweep {
-  0% {
-    transform: rotate(0deg);
+@layer base {
+  html { background: rgb(var(--ink)); -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-ink font-sans text-sand antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+    letter-spacing: -0.006em;
   }
-  100% {
-    transform: rotate(360deg);
-  }
+  h1, h2, h3 { @apply font-serif font-normal text-ivory; letter-spacing: -0.015em; }
+  ::selection { background: rgb(var(--signal) / 0.85); color: rgb(var(--ink)); }
+  :focus-visible { outline: 2px solid rgb(var(--signal)); outline-offset: 2px; border-radius: 6px; }
+  input[type='number']::-webkit-inner-spin-button { opacity: 0.4; }
+  * { scrollbar-width: thin; scrollbar-color: rgb(var(--ivory) / 0.14) transparent; }
 }
 
-.radar-sweep-beam {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 160vmax;
-  height: 160vmax;
-  margin-top: -80vmax;
-  margin-left: -80vmax;
-  border-radius: 50%;
-  background: conic-gradient(
-    from 0deg,
-    rgba(255, 107, 0, 0.30) 0deg,
-    rgba(255, 107, 0, 0.12) 35deg,
-    rgba(255, 107, 0, 0.02) 75deg,
-    transparent 110deg,
-    transparent 360deg
-  );
-  animation: radar-sweep 7s linear infinite;
-  pointer-events: none;
+@layer components {
+  .page { @apply mx-auto w-full max-w-page px-4 sm:px-6 lg:px-8; }
+  .eyebrow { @apply font-sans text-[0.8125rem] font-medium text-stone; }
+  .code { @apply font-mono text-[0.75rem] tabular-nums text-stone; }
+  .display { @apply font-serif text-ivory; line-height: 1.02; letter-spacing: -0.025em; }
+  .numeral { @apply font-serif text-ivory tabular-nums; letter-spacing: -0.02em; }
+  .data { @apply font-mono tabular-nums; }
+  .hairline { @apply border-line; }
+  .panel { @apply rounded-2xl border border-line bg-ink-900; }
+  .glass { @apply border border-line bg-ink-900/80 backdrop-blur-xl; }
+  .link { @apply text-ivory underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-signal; }
 }
 
-/* 3D Elevated Pin Marker Shadow */
-.custom-pin-shadow {
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.65), 0 10px 10px rgba(0, 0, 0, 0.5);
-}
+@layer utilities {
+  .mask-fade-b { mask-image: linear-gradient(to bottom, black 70%, transparent); }
+  .text-balance { text-wrap: balance; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ─── MapLibre ───────────────────────────────────────────────────────────── */
+.maplibregl-map { font-family: inherit; }
+.maplibregl-ctrl-group { background: rgb(var(--ink-900) / 0.9) !important; border: 1px solid rgb(var(--ivory) / 0.08); box-shadow: none !important; border-radius: 12px !important; overflow: hidden; }
+.maplibregl-ctrl-group button { width: 34px; height: 34px; }
+.maplibregl-ctrl-group button + button { border-top: 1px solid rgb(var(--ivory) / 0.08) !important; }
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon { filter: invert(0.92); }
+.maplibregl-ctrl-attrib { background: rgb(var(--ink) / 0.6) !important; color: rgb(var(--stone)); font-size: 10px; }
+.maplibregl-ctrl-attrib a { color: rgb(var(--stone)) !important; }
+.maplibregl-ctrl-attrib-button { filter: invert(0.85); }
+.maplibregl-ctrl-scale { background: rgb(var(--ink) / 0.6); border-color: rgb(var(--ivory) / 0.3); color: rgb(var(--sand)); font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+.maplibregl-popup-content { background: rgb(var(--ink-900)); color: rgb(var(--sand)); border: 1px solid rgb(var(--ivory) / 0.1); border-radius: 12px; padding: 10px 12px; font-size: 12px; }
+.maplibregl-popup-tip { border-top-color: rgb(var(--ink-900)) !important; border-bottom-color: rgb(var(--ink-900)) !important; }

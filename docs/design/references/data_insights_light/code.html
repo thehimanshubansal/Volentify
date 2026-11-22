@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Volentify - Insights Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#09151a",
+                        "on-secondary-container": "#a8afff",
+                        "on-error": "#690005",
+                        "primary-fixed-dim": "#ffb693",
+                        "surface-container": "#152127",
+                        "primary": "#ffb693",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#343d96",
+                        "surface": "#09151a",
+                        "outline-variant": "#5a4136",
+                        "primary-fixed": "#ffdbcc",
+                        "on-primary-container": "#572000",
+                        "on-secondary": "#1b247f",
+                        "tertiary": "#ffb3ac",
+                        "surface-container-high": "#202c32",
+                        "surface-tint": "#ffb693",
+                        "surface-variant": "#2a363d",
+                        "on-primary-fixed-variant": "#7a3000",
+                        "surface-container-lowest": "#041015",
+                        "primary-container": "#ff6b00",
+                        "on-secondary-fixed": "#000767",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "tertiary-fixed": "#ffdad6",
+                        "on-surface-variant": "#e2bfb0",
+                        "secondary-container": "#343d96",
+                        "error-container": "#93000a",
+                        "surface-container-low": "#111d23",
+                        "secondary": "#bdc2ff",
+                        "surface-dim": "#09151a",
+                        "inverse-on-surface": "#263238",
+                        "surface-bright": "#2f3b41",
+                        "outline": "#a98a7d",
+                        "on-tertiary": "#680008",
+                        "error": "#ffb4ab",
+                        "on-background": "#d7e4ec",
+                        "inverse-surface": "#d7e4ec",
+                        "on-tertiary-container": "#6a0008",
+                        "tertiary-container": "#ff675e",
+                        "surface-container-highest": "#2a363d",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "inverse-primary": "#a04100",
+                        "on-primary-fixed": "#351000",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-surface": "#d7e4ec",
+                        "on-tertiary-fixed": "#410003",
+                        "secondary-fixed": "#e0e0ff",
+                        "on-primary": "#561f00"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "margin-desktop": "24px",
+                        "gutter": "16px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "unit": "4px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "title-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "label-caps": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "data-tabular": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "title-md": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "data-tabular": ["14px", { "lineHeight": "18px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-background font-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-margin-desktop h-16 bg-background border-b border-outline-variant">
+<div class="flex items-center gap-8">
+<span class="font-display-lg text-display-lg font-bold text-primary">Volentify</span>
+<div class="hidden md:flex gap-6 items-center h-full">
+<a class="text-on-surface-variant hover:text-primary transition-colors py-4" href="#">Dashboard</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors py-4" href="#">Tactical</a>
+<a class="text-primary border-b-2 border-primary pb-1 py-4 font-bold" href="#">Insights</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors py-4" href="#">Local Map</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="bg-error text-on-error px-4 py-2 rounded-lg font-label-caps text-label-caps hover:bg-error-container transition-colors flex items-center gap-2">
+                Broadcast Alert
+            </button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant ml-2">
+<img alt="Response Commander Profile" class="w-full h-full object-cover" data-alt="A small, professional portrait photograph of an emergency response commander in a high-tech control room environment, sharp focus, cool lighting, corporate identity badge style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3zANyBMI-CSRlde7QWIvP-toGdBLHcd0IO2aGAAP5S6nmh9AlEi_zTGqFdMO5KTH0pzuA73kRBpJLwJYEnE2r11q8lttMu9rxsA7jK8d4MN1W4bWiFz2FJo5fr77NqCs4lQEOcMDzp9QKOquGRHqZ-YdQcHudcuBpzrQhQQ9xib2lE58FCLDWyLIUpMkicWZ8tnDhHmrWuEba2RLw40k3PNGS7T2Lb87KnLH3maiGwKXIxQ1njO3XMQ"/>
+</div>
+</div>
+</nav>
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-16 h-[calc(100vh-64px)] w-64 z-40 flex flex-col bg-surface-container border-r border-outline-variant hidden md:flex">
+<div class="p-4 border-b border-outline-variant flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg overflow-hidden bg-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary text-xl">admin_panel_settings</span>
+</div>
+<div>
+<h2 class="font-label-caps text-label-caps text-on-surface">Disaster Filters</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Active Mitigation</p>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto py-4 px-2 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-secondary-container text-on-secondary-container font-bold hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">water_drop</span>
+<span class="font-label-caps text-label-caps">Floods</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">local_fire_department</span>
+<span class="font-label-caps text-label-caps">Wildfires</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">volcano</span>
+<span class="font-label-caps text-label-caps">Earthquakes</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">cyclone</span>
+<span class="font-label-caps text-label-caps">Storms</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">warning</span>
+<span class="font-label-caps text-label-caps">Hazmat</span>
+</a>
+<div class="mt-4 px-3">
+<button class="w-full bg-primary text-on-primary py-2 rounded-lg font-label-caps text-label-caps hover:bg-primary-container transition-colors">
+                    Apply Filters
+                </button>
+</div>
+</div>
+<div class="mt-auto border-t border-outline-variant p-2 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">menu_book</span>
+<span class="font-label-caps text-label-caps">Resources</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-variant transition-all" href="#">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="font-label-caps text-label-caps">Support</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-64 pt-16 min-h-screen flex flex-col md:flex-row p-margin-desktop gap-gutter bg-background">
+<!-- Left: Map Area -->
+<div class="w-full md:w-1/2 flex flex-col gap-gutter h-[calc(100vh-120px)]">
+<div class="bg-surface-container rounded-xl border border-outline-variant overflow-hidden h-full flex flex-col relative">
+<div class="absolute top-4 left-4 z-10 bg-surface-container/80 backdrop-blur-sm p-3 rounded-lg border border-outline-variant flex flex-col gap-2">
+<h3 class="font-title-md text-title-md text-on-surface">Flood Zone Analysis</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Sector Alpha-4</p>
+</div>
+<div class="w-full h-full bg-surface-variant relative overflow-hidden group">
+<!-- Placeholder for interactive map, styled as a subtle vector/satellite view -->
+<div class="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-luminosity group-hover:opacity-60 transition-opacity" data-alt="A clean, highly technical digital vector map of a coastal city showing precise topographic contour lines, flood zones marked in translucent shades of cyan and deep blue, glowing nodes representing emergency assets, grid lines overlay, dark theme, sophisticated dashboard UI aesthetic, sharp lines, cinematic data visualization." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDqyeewIEVKO5LClFRIfPNSj3xyRnySWGteyVsAw1ZwArwwVX5VZVf84HpnRJsPWNQGzK_FBSJkYlNw_bpJHQjOaG2emim-f4j6lksuwZ9d_W7HqssPcEkNelFUYAqKuKqNkbOVaF0P6yGEpqhK2joZxM-hVmbrMVJfxVD9B7gdO15wWXQVH6ttExGZX3GV4YlMGZonA6kGBKhCXNinPOiVHYPD5OcWjce5SeB1A8C20ChRUpcu_wCDZA')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent"></div>
+</div>
+</div>
+</div>
+<!-- Right: Data Panel -->
+<div class="w-full md:w-1/2 flex flex-col gap-gutter overflow-y-auto pr-2 h-[calc(100vh-120px)] custom-scrollbar">
+<div class="grid grid-cols-2 gap-gutter">
+<div class="bg-surface-container p-4 rounded-xl border border-outline-variant flex flex-col gap-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Water Level Rise</span>
+<span class="font-display-lg text-display-lg text-primary">+2.4m</span>
+<div class="flex items-center gap-1 text-error text-body-sm">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span>0.2m/hr</span>
+</div>
+</div>
+<div class="bg-surface-container p-4 rounded-xl border border-outline-variant flex flex-col gap-2">
+<span class="font-label-caps text-label-caps text-on-surface-variant">Evacuation Status</span>
+<span class="font-display-lg text-display-lg text-secondary">84%</span>
+<div class="w-full bg-surface-variant h-2 rounded-full overflow-hidden mt-1">
+<div class="bg-secondary h-full w-[84%]"></div>
+</div>
+</div>
+</div>
+<!-- Resource Allocation Table -->
+<div class="bg-surface-container rounded-xl border border-outline-variant p-4 flex flex-col gap-4">
+<h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">local_shipping</span>
+                    Resource Allocation
+                </h3>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant">
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 pr-4">Asset Type</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 px-4">Location</th>
+<th class="font-label-caps text-label-caps text-on-surface-variant py-2 pl-4 text-right">Status</th>
+</tr>
+</thead>
+<tbody class="font-data-tabular text-data-tabular">
+<tr class="border-b border-surface-variant hover:bg-surface-variant/50 transition-colors">
+<td class="py-3 pr-4 text-on-surface">Rescue Boats (Class A)</td>
+<td class="py-3 px-4 text-on-surface-variant">Sector 12, Pier 4</td>
+<td class="py-3 pl-4 text-right">
+<span class="inline-flex items-center gap-1 bg-secondary-container/20 text-secondary border border-secondary/30 px-2 py-1 rounded font-label-caps text-xs">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Active
+                                    </span>
+</td>
+</tr>
+<tr class="border-b border-surface-variant hover:bg-surface-variant/50 transition-colors">
+<td class="py-3 pr-4 text-on-surface">Heavy Lift Helo</td>
+<td class="py-3 px-4 text-on-surface-variant">Base Alpha</td>
+<td class="py-3 pl-4 text-right">
+<span class="inline-flex items-center gap-1 bg-error/20 text-error border border-error/30 px-2 py-1 rounded font-label-caps text-xs">
+<span class="material-symbols-outlined text-[14px]">warning</span> Refueling
+                                    </span>
+</td>
+</tr>
+<tr class="hover:bg-surface-variant/50 transition-colors">
+<td class="py-3 pr-4 text-on-surface">Medical Supply Truck</td>
+<td class="py-3 px-4 text-on-surface-variant">Transit Corridor B</td>
+<td class="py-3 pl-4 text-right">
+<span class="inline-flex items-center gap-1 bg-primary/20 text-primary border border-primary/30 px-2 py-1 rounded font-label-caps text-xs">
+<span class="material-symbols-outlined text-[14px]">sync</span> En Route
+                                    </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Mitigation Progress -->
+<div class="bg-surface-container rounded-xl border border-outline-variant p-4 flex flex-col gap-4">
+<h3 class="font-title-md text-title-md text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                    Mitigation Progress
+                </h3>
+<div class="h-48 w-full bg-surface-variant rounded-lg border border-outline-variant flex items-end p-2 gap-2">
+<!-- Simple CSS bar chart representation -->
+<div class="flex-1 bg-secondary/20 hover:bg-secondary/40 transition-colors h-[20%] rounded-t relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface p-1 rounded border border-outline text-xs hidden group-hover:block text-on-surface">20%</div>
+</div>
+<div class="flex-1 bg-secondary/40 hover:bg-secondary/60 transition-colors h-[45%] rounded-t relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface p-1 rounded border border-outline text-xs hidden group-hover:block text-on-surface">45%</div>
+</div>
+<div class="flex-1 bg-secondary/60 hover:bg-secondary/80 transition-colors h-[30%] rounded-t relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface p-1 rounded border border-outline text-xs hidden group-hover:block text-on-surface">30%</div>
+</div>
+<div class="flex-1 bg-primary/80 hover:bg-primary transition-colors h-[85%] rounded-t relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface p-1 rounded border border-outline text-xs hidden group-hover:block text-on-surface">85%</div>
+</div>
+<div class="flex-1 bg-secondary/30 hover:bg-secondary/50 transition-colors h-[15%] rounded-t relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-surface p-1 rounded border border-outline text-xs hidden group-hover:block text-on-surface">15%</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="md:ml-64 w-full md:w-[calc(100%-256px)] py-8 px-margin-desktop flex flex-col md:flex-row justify-between items-center gap-gutter bg-surface-container-lowest border-t border-outline-variant relative z-30 mt-auto">
+<div class="font-title-md text-title-md text-primary">Volentify</div>
+<div class="flex gap-4">
+<a class="text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm hover:underline transition-all opacity-80 hover:opacity-100" href="#">Crisis Resources</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm hover:underline transition-all opacity-80 hover:opacity-100" href="#">Agency Contact</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm hover:underline transition-all opacity-80 hover:opacity-100" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-on-surface font-body-sm text-body-sm hover:underline transition-all opacity-80 hover:opacity-100" href="#">System Status</a>
+</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">© 2024 Volentify Disaster Response Agency. All rights reserved.</div>
+</footer>
+<style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #2a363d;
+            border-radius: 4px;
+        }
+    </style>
+</body></html>
