@@ -26,7 +26,7 @@ from api._lib.routers import auth, entities, intelligence, mesh, research  # noq
 VERSION = "3.5.0"
 _probe_limiter = RateLimiter(limit=20, window_s=3600)
 
-app = FastAPI(title="Volentify Disaster Intelligence API", version=VERSION,
+app = FastAPI(title="Volentify-Humanitarian Disaster Intelligence Platform", version=VERSION,
               docs_url="/api/docs", openapi_url="/api/openapi.json", redoc_url=None)
 
 for module in (auth, entities, mesh, intelligence, research):
